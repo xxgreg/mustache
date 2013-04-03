@@ -1,19 +1,14 @@
-library mustache.scanner;
+part of mustache;
 
-List<Token> scan(String source) => new _Scanner(source).scan();
+List<_Token> _scan(String source) => new _Scanner(source).scan();
 
-abstract class Token {
-	int get type;
-	String get value;
-}
-
-const int TEXT = 1;
-const int VARIABLE = 2;
-const int PARTIAL = 3;
-const int OPEN_SECTION = 4;
-const int OPEN_INV_SECTION = 5;
-const int CLOSE_SECTION = 6;
-const int COMMENT = 7;
+const int _TEXT = 1;
+const int _VARIABLE = 2;
+const int _PARTIAL = 3;
+const int _OPEN_SECTION = 4;
+const int _OPEN_INV_SECTION = 5;
+const int _CLOSE_SECTION = 6;
+const int _COMMENT = 7;
 
 tokenTypeString(int type) => ['?', 'Text', 'Var', 'Par', 'Open', 'OpenInv', 'Close', 'Comment'][type];
 
@@ -32,7 +27,7 @@ const int _CARET = 94;
 const int _OPEN_MUSTACHE = 123;
 const int _CLOSE_MUSTACHE = 125;
 
-class _Token implements Token {
+class _Token {
 	_Token(this.type, this.value);
 	_Token.fromChar(this.type, int charCode)
 		: value = new String.fromCharCode(charCode);
@@ -45,12 +40,12 @@ class _Scanner {
 	_Scanner(String source) : _r = new _CharReader(source);
 
 	_CharReader _r;
-	List<Token> _tokens = new List<Token>();
+	List<_Token> _tokens = new List<_Token>();
 
 	int _read() => _r.read();
 	int _peek() => _r.peek();
 
-	_add(Token t) => _tokens.add(t);
+	_add(_Token t) => _tokens.add(t);
 
 	_expect(int c) {
 		if (c != _read())
@@ -60,7 +55,7 @@ class _Scanner {
 	String _readString() => _r.readWhile(
 		(c) => c != _OPEN_MUSTACHE && c != _CLOSE_MUSTACHE && c != _EOF);
 
-	List<Token> scan() {
+	List<_Token> scan() {
 		while(true) {
 			switch(_peek()) {
 				case _EOF:
@@ -83,10 +78,10 @@ class _Scanner {
 					return;
 				case _CLOSE_MUSTACHE:
 					_read();
-					_add(new _Token.fromChar(TEXT, _CLOSE_MUSTACHE));
+					_add(new _Token.fromChar(_TEXT, _CLOSE_MUSTACHE));
 					break;
 				default:
-					_add(new _Token(TEXT, _readString()));
+					_add(new _Token(_TEXT, _readString()));
 			}
 		}	
 	}
@@ -96,7 +91,7 @@ class _Scanner {
 		_read();
 
 		if (_peek() != _OPEN_MUSTACHE) {
-			_add(new _Token.fromChar(TEXT, _OPEN_MUSTACHE));
+			_add(new _Token.fromChar(_TEXT, _OPEN_MUSTACHE));
 			return;
 		}
 
@@ -108,49 +103,49 @@ class _Scanner {
 			// Escaped text {{{ ... }}}
 			case _OPEN_MUSTACHE:
 				_read();
-				_add(new _Token(TEXT, _readString()));
+				_add(new _Token(_TEXT, _readString()));
 				_expect(_CLOSE_MUSTACHE);
 				break;
       			
 			// Escaped text {{& ... }}
 			case _AMP:
 				_read();
-				_add(new _Token(TEXT, _readString()));
+				_add(new _Token(_TEXT, _readString()));
 				break;
 
 			// Comment {{! ... }}
 			case _EXCLAIM:
 				_read();
-				_add(new _Token(COMMENT, _readString()));
+				_add(new _Token(_COMMENT, _readString()));
 				break;
 
 			// Partial {{> ... }}
 			case _GT:
 				_read();
-				_add(new _Token(PARTIAL, _readString()));
+				_add(new _Token(_PARTIAL, _readString()));
 				break;
 
 			// Open section {{# ... }}
 			case _HASH:
 				_read();
-				_add(new _Token(OPEN_SECTION, _readString()));
+				_add(new _Token(_OPEN_SECTION, _readString()));
 				break;
 
 			// Open inverted section {{^ ... }}
 			case _CARET:
 				_read();
-				_add(new _Token(OPEN_INV_SECTION, _readString()));
+				_add(new _Token(_OPEN_INV_SECTION, _readString()));
 				break;
 
 			// Close section {{/ ... }}
 			case _FORWARD_SLASH:
 				_read();
-				_add(new _Token(CLOSE_SECTION, _readString()));
+				_add(new _Token(_CLOSE_SECTION, _readString()));
 				break;
 
 			// Variable {{ ... }}
 			default:
-				_add(new _Token(VARIABLE, _readString()));
+				_add(new _Token(_VARIABLE, _readString()));
 		}
 
 		_expect(_CLOSE_MUSTACHE);
@@ -158,8 +153,6 @@ class _Scanner {
 	}
 }
 
-
-//FIXME return _EOF
 class _CharReader {
   _CharReader(String source)
       : _source = source,

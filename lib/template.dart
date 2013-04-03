@@ -1,51 +1,4 @@
-library mustache;
-
-import 'scanner.dart';
-
-var scannerTests = [
-'_{{variable}}_',
-'_{{variable}}',
-'{{variable}}_',
-'{{variable}}',
-' { ',
-' } ',
-' {} ',
-' }{} ',
-'{{{escaped text}}}',
-'{{&escaped text}}',
-'{{!comment}}',
-'{{#section}}oi{{/section}}',
-'{{^section}}oi{{/section}}',
-'{{>partial}}'
-];
-
-main2() {
-	for (var src in scannerTests) {
-		print('${_pad(src, 40)}${scan(src)}');
-	}	
-}
-
-main() {
-	var source = '{{#section}}_{{var}}_{{/section}}';
-	var tokens = scan(source);
-	var node = _parse(tokens);
-	//var output = render(node, {"section": {"var": "bob"}});
-	
-	var t = new Template(node);
-	var output = t.render({"section": {"var": "bob"}});
-
-	//_visit(node, (n) => print('visit: $n'));
-	print(source);
-	print(tokens);
-	print(node);
-	print(output);
-}
-
-_pad(String s, int len) {
-	for (int i = s.length; i < len; i++)
-		s = s + ' ';
-	return s;
-}
+part of mustache;
 
 // http://mustache.github.com/mustache.5.html
 
@@ -54,33 +7,19 @@ class Node {
 	final int type;
 	final String value;
 	final List<Node> children = new List<Node>();
-
-	//FIXME
-	toString() => stringify(0);
-
-	stringify(int indent) {
-		var pad = '';
-		for (int i = 0; i < indent; i++)
-			pad = '$pad-';
-		var s = '$pad${tokenTypeString(type)} $value\n';		
-		++indent;
-		for (var c in children) {
-			s += c.stringify(indent);
-		}
-		return s;
-	}
+	String toString() => 'Node: ${tokenTypeString(type)}';
 }
 
-Node _parse(List<Token> tokens) {
-	var stack = new List<Node>()..add(new Node(OPEN_SECTION, 'root'));
+Node _parse(List<_Token> tokens) {
+	var stack = new List<Node>()..add(new Node(_OPEN_SECTION, 'root'));
 	for (var t in tokens) {
-		if (t.type == TEXT || t.type == VARIABLE) {
+		if (t.type == _TEXT || t.type == _VARIABLE) {
 			stack.last.children.add(new Node(t.type, t.value));
-		} else if (t.type == OPEN_SECTION || t.type == OPEN_INV_SECTION) {
+		} else if (t.type == _OPEN_SECTION || t.type == _OPEN_INV_SECTION) {
 			var child = new Node(t.type, t.value);
 			stack.last.children.add(child);
 			stack.add(child);
-		} else if (t.type == CLOSE_SECTION) {
+		} else if (t.type == _CLOSE_SECTION) {
 			assert(stack.last.value == t.value); //FIXME throw an exception if these don't match.
 			stack.removeLast();
 		} else {
@@ -91,10 +30,12 @@ Node _parse(List<Token> tokens) {
 	return stack.last;
 }
 
-class Template {
-	Template(this._root);
+class _Template {
+	_Template(String source) 
+		: _root = _parse(_scan(source));
+
 	final Node _root;
-	final ctl = new List(); //TODO use streams.
+	final ctl = new List(); //TODO StreamController();
 	final stack = new List();
 
 	render(values) {
@@ -107,16 +48,16 @@ class Template {
 
 	_renderNode(node) {
 		switch (node.type) {
-			case TEXT:
+			case _TEXT:
 				_renderText(node);
 				break;
-			case VARIABLE:
+			case _VARIABLE:
 				_renderVariable(node);
 				break;
-			case OPEN_SECTION:
+			case _OPEN_SECTION:
 				_renderSection(node);
 				break;
-			case OPEN_INV_SECTION:
+			case _OPEN_INV_SECTION:
 				_renderInvSection(node);
 				break;
 			default:
