@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:mustache/mustache.dart' as mustache;
+import 'package:mustache_no_mirrors/mustache_no_mirrors.dart' as mustache;
 import 'dart:convert';
 
 var verbose = false;

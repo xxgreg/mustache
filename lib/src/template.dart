@@ -216,23 +216,23 @@ class _Renderer {
 		if (object is List && _integerTag.hasMatch(name))
 		  return object[int.parse(name)];
 		
-		if (_lenient && !_validTag.hasMatch(name))
-			return _noSuchProperty;
+		//if (_lenient && !_validTag.hasMatch(name))
+		return _noSuchProperty;
 		
-		var instance = reflect(object);
-		var field = instance.type.instanceMembers[new Symbol(name)];
-		if (field == null) return _noSuchProperty;
-		
-		var invocation = null;
-		if ((field is VariableMirror) || ((field is MethodMirror) && (field.isGetter))) {
-			invocation = instance.getField(field.simpleName);
-		} else if ((field is MethodMirror) && (field.parameters.length == 0)) {
-			invocation = instance.invoke(field.simpleName, []);
-		}
-		if (invocation == null) {
-			return _noSuchProperty;
-		}
-		return invocation.reflectee;
+//		var instance = reflect(object);
+//		var field = instance.type.instanceMembers[new Symbol(name)];
+//		if (field == null) return _noSuchProperty;
+//		
+//		var invocation = null;
+//		if ((field is VariableMirror) || ((field is MethodMirror) && (field.isGetter))) {
+//			invocation = instance.getField(field.simpleName);
+//		} else if ((field is MethodMirror) && (field.parameters.length == 0)) {
+//			invocation = instance.invoke(field.simpleName, []);
+//		}
+//		if (invocation == null) {
+//			return _noSuchProperty;
+//		}
+//		return invocation.reflectee;
 	}
 
 	_renderVariable(node, {bool escape : true}) {

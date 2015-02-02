@@ -1,7 +1,7 @@
 library mustache_test;
 
 import 'package:unittest/unittest.dart';
-import 'package:mustache/mustache.dart';
+import 'package:mustache_no_mirrors/mustache_no_mirrors.dart';
 
 const MISMATCHED_TAG = 'Mismatched tag';
 const UNEXPECTED_EOF = 'Unexpected end of input';
@@ -364,19 +364,19 @@ main() {
 		});
 	});
 
-	group('Mirrors', () {
-    test('Simple field', () {
-      var output = parse('_{{bar}}_')
-        .renderString(new Foo()..bar = 'bob');
-      expect(output, equals('_bob_'));
-    });
-    
-    test('Lambda', () {
-      var output = parse('_{{lambda}}_')
-        .renderString(new Foo()..lambda = (_) => 'yo');
-      expect(output, equals('_yo_'));
-    });
-  });
+//	group('Mirrors', () {
+//    test('Simple field', () {
+//      var output = parse('_{{bar}}_')
+//        .renderString(new Foo()..bar = 'bob');
+//      expect(output, equals('_bob_'));
+//    });
+//    
+//    test('Lambda', () {
+//      var output = parse('_{{lambda}}_')
+//        .renderString(new Foo()..lambda = (_) => 'yo');
+//      expect(output, equals('_yo_'));
+//    });
+//  });
 }
 
 renderFail(source, values) {

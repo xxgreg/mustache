@@ -1,7 +1,7 @@
-name: mustache
-version: 0.1.8
+name: mustache_no_mirrors
+version: 0.1.9
 author: Greg Lowe <greg@vis.net.nz>
-description: Mustache template library
+description: Mustache template library (without the dart:mirrors dependency)
 homepage: https://github.com/xxgreg/mustache
 environment:
   sdk: '>=1.0.0 <2.0.0'

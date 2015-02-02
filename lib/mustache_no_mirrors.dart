@@ -1,7 +1,7 @@
 library mustache;
 
-@MirrorsUsed(metaTargets: const [mustache])
-import 'dart:mirrors';
+//@MirrorsUsed(metaTargets: const [mustache])
+//import 'dart:mirrors';
 
 part 'src/char_reader.dart';
 part 'src/scanner.dart';
