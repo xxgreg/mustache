@@ -5,7 +5,7 @@ _Node _parse(String source,
              String templateName,
              String delimiters) {
   
-  if (source == null) throw new ArgumentError.notNull('Template source');
+  if (source == null) throw new ArgumentError('Template source is null');
   
   var tokens = 
       new _Scanner(source, templateName, delimiters, lenient: lenient).scan();
