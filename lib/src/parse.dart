@@ -3,7 +3,8 @@ part of mustache;
 _Node _parse(String source,
              bool lenient,
              String templateName,
-             String delimiters) {
+             String delimiters,
+             Map<String,LambdaFunction> helpers) {
   
   if (source == null) throw new ArgumentError('Template source is null');
   
@@ -34,14 +35,18 @@ _Node _parse(String source,
         break;
 
       case _CLOSE_SECTION:
+        
         if (stack.last.value != t.value) {
-          throw new _TemplateException(
-            "Mismatched tag, expected: '${stack.last.value}', was: '${t.value}'",
-            templateName, source, t.start);
+          //FIXME quick hack for experimental helpers support.
+          var helperName = t.value.split(new RegExp('[ \n\r\t]+')).first;
+          if (helpers == null || !helpers.containsKey(helperName)) {
+            throw new _TemplateException(
+              "Mismatched tag, expected: '${stack.last.value}', was: '${t.value}'",
+              templateName, source, t.start);
+          }
         }
   
         stack.last.contentEnd = t.start;
-        
         stack.removeLast();
         break;
       

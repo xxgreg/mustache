@@ -6,10 +6,19 @@ class _LambdaContext implements LambdaContext {
   final _Node _node;
   final _Renderer _renderer;
   final bool _isSection;
+  final bool _isHelper;
+  final List<String> _arguments;
   bool _closed = false;
   
-  _LambdaContext(this._node, this._renderer, {bool isSection: true})
-      : _isSection = isSection;
+  //FIXME remove isSection parameter, can just check node.type instead.
+  // Perhaps for isHelper too, once implemented.
+  _LambdaContext(this._node, this._renderer,
+       {bool isSection: true,
+        bool isHelper: false,
+        List<String> arguments: const <String>[]})
+      : _isSection = isSection,
+        _isHelper = isHelper,
+        _arguments = arguments;
   
   void close() {
     _closed = true;
@@ -21,6 +30,12 @@ class _LambdaContext implements LambdaContext {
         _renderer._templateName, _renderer._source, _node.start);
   }
 
+  bool get isSection => _isSection;
+  
+  bool get isHelper => _isHelper;
+  
+  List<String> get arguments => _arguments;
+  
   //TODO is allowing adding value to the stack a good idea?? Not sure.
   String renderString({Object value}) {
     _checkClosed();
@@ -65,7 +80,8 @@ class _LambdaContext implements LambdaContext {
     var node = _parse(source,
         _renderer._lenient,
         _renderer._templateName,
-        delimiters);
+        delimiters,
+        _renderer._helpers);
     var renderer = new _Renderer.lambda(
         _renderer,
         node,

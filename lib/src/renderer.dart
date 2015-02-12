@@ -17,7 +17,8 @@ class _Renderer {
       this._templateName,
       this._indent,
       this._source,
-      this._delimiters)
+      this._delimiters,
+      this._helpers)
     : _stack = new List.from(stack); 
   
   _Renderer.partial(_Renderer renderer, _Template partial, String indent)
@@ -31,7 +32,8 @@ class _Renderer {
           renderer._templateName,
           renderer._indent + indent,
           partial.source,
-          '{{ }}');
+          '{{ }}',
+          renderer._helpers);
 
    _Renderer.subtree(_Renderer renderer, _Node node, StringSink sink)
        : this(node,
@@ -44,7 +46,8 @@ class _Renderer {
            renderer._templateName,
            renderer._indent,
            renderer._source,
-           '{{ }}');
+           '{{ }}',
+           renderer._helpers);
 
     _Renderer.lambda(
         _Renderer renderer,
@@ -63,7 +66,8 @@ class _Renderer {
            renderer._templateName,
            renderer._indent + indent,
            source,
-           delimiters);
+           delimiters,
+           renderer._helpers);
    
   final _Node _root;
   final StringSink _sink;
@@ -75,6 +79,7 @@ class _Renderer {
   final String _templateName;
   final String _indent;
   final String _source;
+  final Map<String,LambdaFunction> _helpers;
 
   String _delimiters;
   
@@ -107,7 +112,20 @@ class _Renderer {
   
   _write(Object output) => _sink.write(output.toString());
 
-  _renderNode(_Node node) {
+  void _renderNode(_Node node) {
+    
+    //FIXME just an ugly hack for now.
+    // Perhaps make a separate helper node type.
+    // Or just a flag on node.
+    //TODO handle more types of tags - i.e. unesc_var
+    if (node.type == _VARIABLE || node.type == _OPEN_SECTION) {
+      var arguments = node.value.split(new RegExp('[ \n\t\r]+'));
+      if (_helpers != null && _helpers.containsKey(arguments[0])) {
+        _renderHelper(node);
+        return;
+      }
+    }
+    
     switch (node.type) {
       case _TEXT:
         _renderText(node);
@@ -137,7 +155,7 @@ class _Renderer {
     }
   }
 
-  _renderText(_Node node, {bool lastNode: false}) {
+  void _renderText(_Node node, {bool lastNode: false}) {
     var s = node.value;
     if (s == '') return;
     if (_indent == null || _indent == '') {
@@ -153,7 +171,7 @@ class _Renderer {
 
   // Walks up the stack looking for the variable.
   // Handles dotted names of the form "a.b.c".
-  _resolveValue(String name) {
+  Object _resolveValue(String name) {
     if (name == '.') {
       return _stack.last;
     }
@@ -178,7 +196,7 @@ class _Renderer {
   // which contains the key name, this is object[name]. For other
   // objects, this is object.name or object.name(). If no property
   // by the given name exists, this method returns noSuchProperty.
-  _getNamedProperty(object, name) {
+  Object _getNamedProperty(object, name) {
     
     if (object is Map && object.containsKey(name))
       return object[name];
@@ -205,7 +223,7 @@ class _Renderer {
     return invocation.reflectee;
   }
 
-  _renderVariable(_Node node, {bool escape : true}) {
+  void _renderVariable(_Node node, {bool escape : true}) {
     var value = _resolveValue(node.value);
     
     if (value is Function) {
@@ -226,12 +244,39 @@ class _Renderer {
     }
   }
 
-  _renderSectionWithValue(node, value) {
+  void _renderSectionWithValue(node, value) {
     _stack.add(value);
     node.children.forEach(_renderNode);
     _stack.removeLast();
   }
 
+  void _renderHelper(_Node node, {escape: true}) {
+    //FIXME just an ugly hack for now.
+    //Will only work in lenient mode. Would also be nice not to have to any
+    //argument parsing during rendering.
+    
+    var arguments = node.value.split(new RegExp('[ \n\t\r]+'));
+    var helper = _helpers[arguments[0]];
+    
+    var argValues = arguments
+        .skip(1)
+        .map((arg) => _resolveValue(arg)).toList(growable: false);
+    
+    var context = new _LambdaContext(node, this,
+        isSection: false,
+        isHelper: true,
+        arguments: argValues);
+    var value = helper(context);
+    context.close();
+    
+    var valueString = (value == null) ? '' : value.toString();
+    var output = !escape && _htmlEscapeValues
+        ? _htmlEscape(valueString)
+        : valueString;
+
+    _write(output);
+  }
+    
   void _renderSubtree(node, StringSink sink, {Object value}) {
     var renderer = new _Renderer.subtree(this, node, sink);
     if (value != null) renderer._stack.add(value);

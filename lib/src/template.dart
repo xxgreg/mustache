@@ -3,16 +3,18 @@ part of mustache;
 class _Template implements Template {
  
   _Template.fromSource(String source, 
-       {bool lenient: false,
-        bool htmlEscapeValues : true,
-        String name,
-        PartialResolver partialResolver})
+       {String name,
+        bool lenient: false,
+        bool htmlEscapeValues : true,        
+        PartialResolver partialResolver,
+        Map<String,LambdaFunction> helpers})
        :  source = source,
-          _root = _parse(source, lenient, name, '{{ }}'),
+          _root = _parse(source, lenient, name, '{{ }}', helpers),
           _lenient = lenient,
           _htmlEscapeValues = htmlEscapeValues,
           _name = name,
-          _partialResolver = partialResolver;
+          _partialResolver = partialResolver,
+          _helpers = helpers;
   
   final String source;
   final _Node _root;
@@ -20,6 +22,7 @@ class _Template implements Template {
   final bool _htmlEscapeValues;
   final String _name;
   final PartialResolver _partialResolver;
+  final Map<String,LambdaFunction> _helpers;
   
   String get name => _name;
   
@@ -32,7 +35,7 @@ class _Template implements Template {
   void render(values, StringSink sink) {
     var renderer = new _Renderer(_root, sink, values, [values],
         _lenient, _htmlEscapeValues, _partialResolver, _name, '', source,
-        '{{ }}');
+        '{{ }}', _helpers);
     renderer.render();
   }
 }

@@ -23,26 +23,27 @@ Template parse(String source, {bool lenient : false})
 abstract class Template {
 
   /// The constructor parses the template source and throws [TemplateException]
-  /// if the syntax of the source is invalid.
-  /// Tag names may only contain characters a-z, A-Z, 0-9, underscore, and minus,
-  /// unless lenient mode is specified.
+  /// if the syntax of the source is invalid. Tag names may only contain the
+  /// characters a-z, A-Z, 0-9, underscore, minus, and period unless lenient
+  /// mode is specified.
   factory Template(String source,
-      {bool lenient,
-       bool htmlEscapeValues,
-       String name,
-       PartialResolver partialResolver}) = _Template.fromSource;
+      {String name,
+       bool lenient,
+       bool htmlEscapeValues,       
+       PartialResolver partialResolver,
+       Map<String,LambdaFunction> helpers}) = _Template.fromSource;
   
   String get name;
   String get source;
   
 	/// [values] can be a combination of Map, List, String. Any non-String object
-	/// will be converted using toString(). Null values will cause a 
+	/// will be converted using toString(). Missing values will cause a 
 	/// [TemplateException], unless lenient module is enabled.
 	String renderString(values);
 
 	/// [values] can be a combination of Map, List, String. Any non-String object
-	/// will be converted using toString(). Null values will cause a 
-	/// FormatException, unless lenient module is enabled.
+	/// will be converted using toString(). Missing values will cause a 
+	/// [TemplateException], unless lenient module is enabled.
 	void render(values, StringSink sink);
 }
 
@@ -82,6 +83,10 @@ abstract class LambdaContext {
   
   /// Lookup the value of a variable in the current context. 
   Object lookup(String variableName);
+  
+  bool get isHelper;
+  
+  List<String> get arguments;
 }
 
 

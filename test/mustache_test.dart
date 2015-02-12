@@ -599,6 +599,36 @@ Empty.
     });
     
   });
+
+  group('Handlerbars helpers', () {
+    
+    test("Variable", () {
+      var source = '<{{helper foo}}>';
+      var helpers = {'helper': (LambdaContext ctx) {
+        return ctx.arguments[0];
+      }};
+      var values = {'foo': 'bar'};
+      var output = '<bar>';
+      
+      var t = new Template(source, lenient: true, helpers: helpers);
+      expect(t.renderString(values), equals(output));      
+    });
+
+    test("Section", () {
+      var source = '<{{#helper foo}} oi {{/helper}}>';
+      var helpers = {'helper': (LambdaContext ctx) {
+        ctx.write(ctx.arguments[0]);
+        ctx.render();
+        ctx.write(ctx.arguments[0]);
+      }};
+      var values = {'foo': '-'};
+      var output = '<- oi ->';
+      
+      var t = new Template(source, lenient: true, helpers: helpers);
+      expect(t.renderString(values), equals(output));      
+    });
+    
+  });
   
 	group('Other', () {
 		test('Standalone line', () {
