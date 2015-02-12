@@ -503,8 +503,8 @@ Empty.
       var values = {'markdown': (ctx) => ctx.source};
       var output = '<dsfsf dsfsdf dfsdfsd>';
       expect(parse(template).renderString(values), equals(output));      
-    });
-
+    });    
+    
     test('Alternate Delimiters', () {
 
       // A lambda's return value should parse with the default delimiters.
@@ -541,6 +541,65 @@ Empty.
     });
   });
 	
+  group('Lambda context', () {
+    
+    test("LambdaContext write", () {
+      var template = '<{{#markdown}}{{content}}{{/markdown}}>';
+      var values = {'markdown': (ctx) {
+        ctx.write('foo');
+      }};
+      var output = '<foo>';
+      expect(parse(template).renderString(values), equals(output));      
+    });
+
+    test("LambdaContext render", () {
+      var template = '<{{#markdown}}{{content}}{{/markdown}}>';
+      var values = {'content': 'bar', 'markdown': (ctx) {
+        ctx.render();
+      }};
+      var output = '<bar>';
+      expect(parse(template).renderString(values), equals(output));      
+    });
+
+    test("LambdaContext render with value", () {
+      var template = '<{{#markdown}}{{content}}{{/markdown}}>';
+      var values = {'markdown': (LambdaContext ctx) {
+        ctx.render(value: {'content': 'oi!'});
+      }};
+      var output = '<oi!>';
+      expect(parse(template).renderString(values), equals(output));      
+    });
+
+    test("LambdaContext renderString with value", () {
+      var template = '<{{#markdown}}{{content}}{{/markdown}}>';
+      var values = {'markdown': (LambdaContext ctx) {
+        return ctx.renderString(value: {'content': 'oi!'});
+      }};
+      var output = '<oi!>';
+      expect(parse(template).renderString(values), equals(output));      
+    });
+
+    test("LambdaContext write and return", () {
+      var template = '<{{#markdown}}{{content}}{{/markdown}}>';
+      var values = {'markdown': (LambdaContext ctx) {
+        ctx.write('foo');
+        return 'bar';
+      }};
+      var output = '<foobar>';
+      expect(parse(template).renderString(values), equals(output));      
+    });
+
+    test("LambdaContext renderSource with value", () {
+      var template = '<{{#markdown}}{{content}}{{/markdown}}>';
+      var values = {'markdown': (LambdaContext ctx) {
+        return ctx.renderSource(ctx.source, value: {'content': 'oi!'});
+      }};
+      var output = '<oi!>';
+      expect(parse(template).renderString(values), equals(output));      
+    });
+    
+  });
+  
 	group('Other', () {
 		test('Standalone line', () {
 			var val = parse('|\n{{#bob}}\n{{/bob}}\n|').renderString({'bob': []});

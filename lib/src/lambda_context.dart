@@ -20,27 +20,26 @@ class _LambdaContext implements LambdaContext {
         'LambdaContext accessed outside of callback.', 
         _renderer._templateName, _renderer._source, _node.start);
   }
-  
-  /// Render the current section tag in the current context and return the
-  /// result as a string.
-  String renderString() {
+
+  //TODO is allowing adding value to the stack a good idea?? Not sure.
+  String renderString({Object value}) {
     _checkClosed();
-    return _renderer._renderSubtree(_node);
+    var buffer = new StringBuffer();
+    _renderer._renderSubtree(_node, buffer, value: value);
+    return buffer.toString();
   }
 
-  //FIXME Currently only return values are supported.
-  /// Render and directly output the current section tag.
-//  void render() {
-//    _checkClosed();
-//  }
+  //TODO is allowing adding value to the stack a good idea?? Not sure.
+  void render({Object value}) {
+    _checkClosed();
+    _renderer._renderSubtree(_node, _renderer._sink, value: value);
+  }
 
-  //FIXME Currently only return values are supported.
-  /// Output a string.
-//  void write(Object object) {
-//    _checkClosed();
-//  }
+  void write(Object object) {
+    _checkClosed();
+    _renderer._sink.write(object);
+  }
 
-  /// Get the unevaluated template source for the current section tag.
   String get source {
     _checkClosed();
     
@@ -57,8 +56,8 @@ class _LambdaContext implements LambdaContext {
     return source;
   }
 
-  /// Evaluate the string as a mustache template using the current context.
-  String renderSource(String source) {
+  //TODO is allowing adding value to the stack a good idea?? Not sure.
+  String renderSource(String source, {Object value}) {
     _checkClosed();
     var sink = new StringBuffer();
     // Lambdas used for sections should parse with the current delimiters.
@@ -74,7 +73,11 @@ class _LambdaContext implements LambdaContext {
         _renderer._indent,
         sink,
         _renderer._delimiters);
+    
+    if (value != null) renderer._stack.add(value);
     renderer.render();
+    if (value != null) renderer._stack.removeLast();
+    
     return sink.toString();
   }
 

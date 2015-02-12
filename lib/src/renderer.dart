@@ -232,11 +232,11 @@ class _Renderer {
     _stack.removeLast();
   }
 
-  String _renderSubtree(node) {
-    var sink = new StringBuffer();
+  void _renderSubtree(node, StringSink sink, {Object value}) {
     var renderer = new _Renderer.subtree(this, node, sink);
+    if (value != null) renderer._stack.add(value);
     renderer.render();
-    return sink.toString();
+    if (value != null) renderer._stack.removeLast();
   }
   
   _renderSection(_Node node) {
@@ -264,8 +264,8 @@ class _Renderer {
     } else if (value is Function) {
       var context = new _LambdaContext(node, this, isSection: true);
       var output = value(context);
-      context.close();        
-      _write(output);
+      context.close();
+      if (output != null) _write(output);
       
     } else {
       throw _error('Invalid value type for section, '
