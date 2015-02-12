@@ -4,6 +4,7 @@
 
 * Deprecated parse() function - please update your code to use new Template(source).
 * Deprecated MustacheFormatException - please update your code to use TemplateException.
+* New signature for Template.render and Template.renderString methods - lenient and htmlEscapeValues moved to constructor.
 * Fully passing all mustache spec tests.
 * Added support for MirrorsUsed.
 * Implemented partials. #11
