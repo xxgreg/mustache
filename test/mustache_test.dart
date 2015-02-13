@@ -660,6 +660,12 @@ Empty.
         .renderString(new Foo()..lambda = (_) => 'yo');
       expect(output, equals('_yo_'));
     });
+    
+    test('Simple field inherited', () {
+      var output = parse('_{{bar}}_')
+        .renderString(new Boo()..bar = 'bob');
+      expect(output, equals('_bob_'));
+    });
   });
 
   group('Delimiters', () {
@@ -699,4 +705,7 @@ expectFail(ex, int line, int column, [String msgStartsWith]) {
 class Foo {
   String bar;
   Function lambda;
+}
+
+class Boo extends Foo {  
 }
