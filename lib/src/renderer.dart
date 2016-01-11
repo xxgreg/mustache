@@ -238,7 +238,7 @@ class Renderer extends Visitor {
         return (object.containsKey(name) ? object[name] : noSuchProperty);
     }
 
-    //
+    // Checks if object has 'isNotEmpty' and avoids a mirror for this case
     if(name == "isNotEmpty") {
         try {
             return object.isNotEmpty;
@@ -280,10 +280,9 @@ class Renderer extends Visitor {
         return noSuchProperty;
     }
 
-    // null can be a valid value...
-    // if (invocation == null) {
-    //   return noSuchProperty;
-    // }
+    if (invocation == null) {
+      return noSuchProperty;
+    }
 
     return invocation;
   }
