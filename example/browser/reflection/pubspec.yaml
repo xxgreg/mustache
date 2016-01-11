@@ -1,0 +1,27 @@
+name: 'mustache_reflection_test'
+
+version: 0.0.1
+description: An absolute bare-bones web app.
+#author: Your Name <email@example.com>
+#homepage: https://www.example.com
+
+environment:
+  sdk: '>=1.0.0 <2.0.0'
+
+dependencies:
+  browser: '>=0.10.0 <0.11.0'
+  dart_to_js_script_rewriter: '^0.1.0'
+
+  mustache:
+    path: ../../../
+
+dev_dependencies:
+  reflectable: '^0.5.0'
+
+transformers:
+- dart_to_js_script_rewriter
+
+- reflectable:
+    entry_points:
+      - web/main.dart # The path to your main file
+    # formatted: true # Optional.
