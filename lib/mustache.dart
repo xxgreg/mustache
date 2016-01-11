@@ -2,6 +2,7 @@
 
 library mustache;
 
+import 'package:reflectable/reflectable.dart';
 import 'src/template.dart' as t;
 
 /// Use new Template(source) instead.
@@ -69,12 +70,14 @@ abstract class LambdaContext {
   Object lookup(String variableName);
 }
 
-const MustacheMirrorsUsedAnnotation mustache =
-    const MustacheMirrorsUsedAnnotation();
-
-class MustacheMirrorsUsedAnnotation {
-  const MustacheMirrorsUsedAnnotation();
+class MustacheMirrorsUsedAnnotation extends Reflectable {
+  const MustacheMirrorsUsedAnnotation() : super(
+      invokingCapability,
+      reflectedTypeCapability
+  );
 }
+
+const MustacheMirrorsUsedAnnotation mustache = const MustacheMirrorsUsedAnnotation();
 
 /// [TemplateException] is used to obtain the line and column numbers
 /// of the token which caused parse or render to fail.

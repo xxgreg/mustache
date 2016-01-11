@@ -1,8 +1,11 @@
 library mustache.renderer;
 
-@MirrorsUsed(metaTargets: const [m.MustacheMirrorsUsedAnnotation])
-import 'dart:mirrors';
+//@MirrorsUsed(metaTargets: const [m.MustacheMirrorsUsedAnnotation])
+//import 'dart:mirrors';
+
 import 'package:mustache/mustache.dart' as m;
+import 'package:reflectable/reflectable.dart';
+
 import 'lambda_context.dart';
 import 'node.dart';
 import 'template.dart';
@@ -231,28 +234,57 @@ class Renderer extends Visitor {
   // objects, this is object.name or object.name(). If no property
   // by the given name exists, this method returns noSuchProperty.
   _getNamedProperty(object, name) {
-    if (object is Map && object.containsKey(name)) return object[name];
+    if (object is Map) {
+        return (object.containsKey(name) ? object[name] : noSuchProperty);
+    }
 
-    if (object is List && _integerTag.hasMatch(name)) return object[
-        int.parse(name)];
+    // Checks if object has 'isNotEmpty' and avoids a mirror for this case
+    if(name == "isNotEmpty") {
+        try {
+            return object.isNotEmpty;
 
-    if (lenient && !_validTag.hasMatch(name)) return noSuchProperty;
+        } on NoSuchMethodError {
+            return noSuchProperty;
+        }
+    }
 
-    var instance = reflect(object);
-    var field = instance.type.instanceMembers[new Symbol(name)];
-    if (field == null) return noSuchProperty;
+
+    if (object is List) {
+        try {
+            final int index = int.parse(name);
+            return (_integerTag.hasMatch(name) ? object[index] : noSuchProperty);
+        } on FormatException {
+            return noSuchProperty;
+        }
+    }
+
+    if (lenient && !_validTag.hasMatch(name)) {
+        return noSuchProperty;
+    }
 
     var invocation = null;
-    if ((field is VariableMirror) ||
-        ((field is MethodMirror) && (field.isGetter))) {
-      invocation = instance.getField(field.simpleName);
-    } else if ((field is MethodMirror) && (field.parameters.length == 0)) {
-      invocation = instance.invoke(field.simpleName, []);
+    try {
+        final InstanceMirror instance = m.mustache.reflect(object);
+        var field = instance.type.instanceMembers[name];
+
+        if (field == null) {
+            return noSuchProperty;
+        }
+
+        if ((field is VariableMirror) || ((field is MethodMirror) && (field.isGetter))) {
+            invocation = instance.invokeGetter(field.simpleName);
+        } else if ((field is MethodMirror) && (field.parameters.length == 0)) {
+            invocation = instance.invoke(field.simpleName, []);
+        }
+    } on Error {
+        return noSuchProperty;
     }
+
     if (invocation == null) {
       return noSuchProperty;
     }
-    return invocation.reflectee;
+
+    return invocation;
   }
 
   m.TemplateException error(String message, Node node) =>

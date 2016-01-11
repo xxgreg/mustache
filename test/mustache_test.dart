@@ -98,12 +98,12 @@ Empty.
 ''');
       expect(
           t.renderString({
-            "section": [1, 2, 3]
+            "section": [5, 6, 7]
           }),
           equals('''  <ul>
-    <li>1</li>
-    <li>2</li>
-    <li>3</li>
+    <li>5</li>
+    <li>6</li>
+    <li>7</li>
   </ul>
 '''));
       expect(t.renderString({"section": []}), equals('Empty.\n'));
@@ -652,7 +652,7 @@ Empty.
     });
   });
 
-  group('Mirrors', () {
+  group('Reflectable', () {
     test('Simple field', () {
       var output = parse('_{{bar}}_').renderString(new Foo()..bar = 'bob');
       expect(output, equals('_bob_'));
@@ -668,6 +668,24 @@ Empty.
           parse('_{{lambda}}_').renderString(new Foo()..lambda = (_) => 'yo');
       expect(output, equals('_yo_'));
     });
+
+    test('Map', () {
+        var output = parse('{{#section}}_{{var.bar}}_{{/section}}').renderString({
+            "section": {"var": new Foo()..bar = 'bob' }
+        });
+        expect(output, equals('_bob_'));
+    });
+
+    test('List', () {
+        var output = parse('{{#section}}_{{var.bar}}_{{/section}}').renderString({
+            "section": [
+                {"var":  new Foo()..bar = 'bob' },
+                {"var":  new Foo()..bar = 'jim'}
+            ]
+        });
+        expect(output, equals('_bob__jim_'));
+    });
+
   });
 
   group('Delimiters', () {
@@ -777,6 +795,7 @@ expectFail(ex, int line, int column, [String msgStartsWith]) {
   if (msgStartsWith != null) expect(ex.message, startsWith(msgStartsWith));
 }
 
+@mustache
 class Foo {
   String bar;
   Function lambda;
