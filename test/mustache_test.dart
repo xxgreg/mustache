@@ -663,6 +663,38 @@ Empty.
       expect(output, equals('_bob_'));
     });
 
+    test('Null field', () {
+      var output = parse('_{{bar}}_').renderString(new Foo()..bar = null);
+      expect(output, equals('__'));
+    });
+
+    test('isNotEmpty', () {
+
+      expect(parse('_{{isNotEmpty}}_').renderString({"isNotEmpty": 42}),
+          equals('_42_'));
+
+      expect(parse('_{{isNotEmpty}}_').renderString({1: 42}),
+          equals('_true_'));
+
+      expect(parse('_{{isEmpty}}_').renderString({}),
+          equals('_true_'));
+
+      expect(parse('_{{bar.isEmpty}}_').renderString({"bar": {}}),
+          equals('_true_'));
+
+      expect(parse('_{{bar.isNotEmpty}}_').renderString({"bar": {}}),
+          equals('_false_'));
+
+      expect(parse('_{{isNotEmpty}}_').renderString([42]),
+          equals('_true_'));
+
+      expect(parse('_{{isNotEmpty}}_').renderString([]),
+          equals('_false_'));
+
+      expect(parse('_{{isNotEmpty}}_').renderString(new Foo()),
+          equals('_true_'));
+    });
+
     test('Lambda', () {
       var output =
           parse('_{{lambda}}_').renderString(new Foo()..lambda = (_) => 'yo');
