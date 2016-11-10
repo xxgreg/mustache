@@ -396,16 +396,18 @@ Empty.
 
   group('Lenient', () {
     test('Odd section name', () {
-      var output = parse(r'{{#section$%$^%}}_{{var}}_{{/section$%$^%}}',
-          lenient: true).renderString({
+      var output =
+          parse(r'{{#section$%$^%}}_{{var}}_{{/section$%$^%}}', lenient: true)
+              .renderString({
         r'section$%$^%': {'var': 'bob'}
       });
       expect(output, equals('_bob_'));
     });
 
     test('Odd variable name', () {
-      var output = parse(r'{{#section}}_{{var$%$^%}}_{{/section}}',
-          lenient: true).renderString({
+      var output =
+          parse(r'{{#section}}_{{var$%$^%}}_{{/section}}', lenient: true)
+              .renderString({
         'section': {r'var$%$^%': 'bob'}
       });
       expect(output, equals('_bob_'));
@@ -448,7 +450,7 @@ Empty.
     String _partialTest(Map values, Map sources, String renderTemplate,
         {bool lenient: false}) {
       var templates = new Map<String, Template>();
-      var resolver = (name) => templates[name];
+      var resolver = (String name) => templates[name];
       for (var k in sources.keys) {
         templates[k] = new Template(sources[k],
             name: k, lenient: lenient, partialResolver: resolver);

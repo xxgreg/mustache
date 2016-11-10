@@ -11,7 +11,7 @@ import 'package:unittest/unittest.dart';
 import 'package:mustache/mustache.dart';
 
 String render(source, values, {partial}) {
-  var resolver = null;
+  PartialResolver resolver = null;
   resolver = (name) {
     var source = partial(name);
     if (source == null) return null;
@@ -46,7 +46,9 @@ _defineGroupFromFile(filename, text) {
     //Make sure that we reset the state of the Interpolation - Multiple Calls test
     //as for some reason dart can run the group more than once causing the test
     //to fail the second time it runs
-    tearDown(() => lambdas['Interpolation - Multiple Calls'].reset());
+    tearDown(() =>
+        (lambdas['Interpolation - Multiple Calls'] as _DummyCallableWithState)
+            .reset());
 
     tests.forEach((t) {
       var testDescription = new StringBuffer(t['name']);
@@ -101,10 +103,12 @@ class _DummyCallableWithState {
   reset() => _callCounter = 0;
 }
 
-Function wrapLambda(Function f) =>
+typedef String ContextToSourceFunction(LambdaContext ctx);
+
+ContextToSourceFunction wrapLambda(Function f) =>
     (LambdaContext ctx) => ctx.renderSource(f(ctx.source).toString());
 
-var lambdas = {
+final lambdas = {
   'Interpolation': wrapLambda((t) => 'world'),
   'Interpolation - Expansion': wrapLambda((t) => '{{planet}}'),
   'Interpolation - Alternate Delimiters':

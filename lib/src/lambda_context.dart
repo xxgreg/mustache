@@ -34,8 +34,10 @@ class LambdaContext implements m.LambdaContext {
   /// result as a string.
   String renderString({Object value}) {
     _checkClosed();
-    if (_node is! SectionNode) _error(
-        'LambdaContext.renderString() can only be called on section tags.');
+    if (_node is! SectionNode) {
+      _error(
+          'LambdaContext.renderString() can only be called on section tags.');
+    }
     var sink = new StringBuffer();
     _renderSubtree(sink, value);
     return sink.toString();
@@ -50,8 +52,8 @@ class LambdaContext implements m.LambdaContext {
 
   void render({Object value}) {
     _checkClosed();
-    if (_node is! SectionNode) _error(
-        'LambdaContext.render() can only be called on section tags.');
+    if (_node is! SectionNode)
+      _error('LambdaContext.render() can only be called on section tags.');
     _renderSubtree(_renderer.sink, value);
   }
 
@@ -72,7 +74,8 @@ class LambdaContext implements m.LambdaContext {
 
     if (nodes.isEmpty) return '';
 
-    if (nodes.length == 1 && nodes.first is TextNode) return nodes.first.text;
+    if (nodes.length == 1 && nodes.first is TextNode)
+      return (nodes.first as TextNode).text;
 
     return _renderer.source.substring(node.contentStart, node.contentEnd);
   }

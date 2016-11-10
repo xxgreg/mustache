@@ -28,6 +28,7 @@ main() {
 
   t = new Template('{{# foo }}{{bar}}{{/ foo }}');
   lambda = (LambdaContext ctx) => ctx.renderSource(ctx.source + '{{cmd}}');
-  output = t.renderString({'foo': lambda, 'bar': 'pub', 'cmd': 'build'}); // pub build
+  output = t
+      .renderString({'foo': lambda, 'bar': 'pub', 'cmd': 'build'}); // pub build
   print(output);
 }

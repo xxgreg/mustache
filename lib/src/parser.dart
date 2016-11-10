@@ -147,7 +147,8 @@ class Parser {
       children.add(new TextNode(token.value, token.start, token.end));
     } else {
       var last = children.removeLast();
-      var node = new TextNode(last.text + token.value, last.start, token.end);
+      var node = new TextNode(
+          (last as TextNode).text + token.value, last.start, token.end);
       children.add(node);
     }
   }

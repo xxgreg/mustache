@@ -42,4 +42,4 @@ class Template implements m.Template {
 }
 
 // Expose getter for nodes internally within this package.
-getTemplateNodes(Template template) => template._nodes;
+List<Node> getTemplateNodes(Template template) => template._nodes;
