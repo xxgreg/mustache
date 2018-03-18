@@ -4,3 +4,5 @@ packages
 /test/spec
 /.idea
 /.packages
+/.dart_tool
+/.pub

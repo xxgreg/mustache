@@ -138,7 +138,7 @@ class Renderer extends Visitor {
       if (output != null) write(output);
     } else if (lenient) {
       // We consider all other values as 'true' in lenient mode.
-      _renderWithValue(node, null);
+      _renderWithValue(node, node.inverse ? false : true);
     } else {
       throw error(
           'Invalid value type for section, '
@@ -183,6 +183,13 @@ class Renderer extends Visitor {
   }
 
   void _renderWithValue(SectionNode node, value) {
+    if (node.inverse == false && (value == null ||
+        (value is Iterable && value.isEmpty) ||
+        (value is Map && value.isEmpty) ||
+        (value == false))) {
+      return;
+    }
+
     push(value);
     node.visitChildren(this);
     pop();
