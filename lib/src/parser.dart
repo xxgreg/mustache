@@ -41,8 +41,7 @@ class Parser {
         _templateName = templateName,
         _delimiters = delimiters,
         _lenient = lenient,
-        _scanner =
-            new Scanner(source, templateName, delimiters);
+        _scanner = new Scanner(source, templateName, delimiters);
 
   final String _source;
   final bool _lenient;

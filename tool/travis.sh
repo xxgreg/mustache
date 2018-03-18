@@ -33,7 +33,7 @@ dartanalyzer test/mustache_test.dart
 git clone https://github.com/mustache/spec.git test/spec
 
 # Run the tests.
-dart --checked test/all.dart
+pub run test
 
 # Gather and send coverage data.
 if [ "$REPO_TOKEN" ]; then
