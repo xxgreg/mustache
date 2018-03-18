@@ -96,8 +96,8 @@ class Renderer extends Visitor {
     }
 
     if (value == noSuchProperty) {
-      if (!lenient) throw error(
-          'Value was missing for variable tag: ${node.name}.', node);
+      if (!lenient)
+        throw error('Value was missing for variable tag: ${node.name}.', node);
     } else {
       var valueString = (value == null) ? '' : value.toString();
       var output = !node.escape || !htmlEscapeValues
@@ -108,8 +108,10 @@ class Renderer extends Visitor {
   }
 
   void visitSection(SectionNode node) {
-    if (node.inverse) _renderInvSection(node);
-    else _renderSection(node);
+    if (node.inverse)
+      _renderInvSection(node);
+    else
+      _renderSection(node);
   }
 
   //TODO can probably combine Inv and Normal to shorten.
@@ -129,8 +131,8 @@ class Renderer extends Visitor {
       // Do nothing.
 
     } else if (value == noSuchProperty) {
-      if (!lenient) throw error(
-          'Value was missing for section tag: ${node.name}.', node);
+      if (!lenient)
+        throw error('Value was missing for section tag: ${node.name}.', node);
     } else if (value is Function) {
       var context = new LambdaContext(node, this);
       var output = value(context);
@@ -183,10 +185,11 @@ class Renderer extends Visitor {
   }
 
   void _renderWithValue(SectionNode node, value) {
-    if (node.inverse == false && (value == null ||
-        (value is Iterable && value.isEmpty) ||
-        (value is Map && value.isEmpty) ||
-        (value == false))) {
+    if (node.inverse == false &&
+        (value == null ||
+            (value is Iterable && value.isEmpty) ||
+            (value is Map && value.isEmpty) ||
+            (value == false))) {
       return;
     }
 
@@ -240,8 +243,8 @@ class Renderer extends Visitor {
   _getNamedProperty(object, name) {
     if (object is Map && object.containsKey(name)) return object[name];
 
-    if (object is List && _integerTag.hasMatch(name)) return object[
-        int.parse(name)];
+    if (object is List && _integerTag.hasMatch(name))
+      return object[int.parse(name)];
 
     if (lenient && !_validTag.hasMatch(name)) return noSuchProperty;
 

@@ -409,16 +409,18 @@ Empty.
 
   group('Lenient', () {
     test('Odd section name', () {
-      var output = parse(r'{{#section$%$^%}}_{{var}}_{{/section$%$^%}}',
-          lenient: true).renderString({
+      var output =
+          parse(r'{{#section$%$^%}}_{{var}}_{{/section$%$^%}}', lenient: true)
+              .renderString({
         r'section$%$^%': {'var': 'bob'}
       });
       expect(output, equals('_bob_'));
     });
 
     test('Odd variable name', () {
-      var output = parse(r'{{#section}}_{{var$%$^%}}_{{/section}}',
-          lenient: true).renderString({
+      var output =
+          parse(r'{{#section}}_{{var$%$^%}}_{{/section}}', lenient: true)
+              .renderString({
         'section': {r'var$%$^%': 'bob'}
       });
       expect(output, equals('_bob_'));
@@ -438,11 +440,11 @@ Empty.
       expect(output, equals(''));
     });
 
-		test('Null inverse section', () {
-			var output = parse('{{^section}}_{{var}}_{{/section}}', lenient: true)
-				.renderString({"section": null});
-			expect(output, equals('__'));
-		});
+    test('Null inverse section', () {
+      var output = parse('{{^section}}_{{var}}_{{/section}}', lenient: true)
+          .renderString({"section": null});
+      expect(output, equals('__'));
+    });
 
     test('Not exist section', () {
       var output = parse('{{#section}}_{{var}}_{{/section}}', lenient: true)
@@ -521,10 +523,13 @@ Empty.
       var output = _partialTest({
         'content': "X",
         'nodes': [
-          {'content': "Y", 'nodes': [
-            {'content': "Y1", 'nodes': []},
-            {'content': "Y2", 'nodes': []},
-          ]}
+          {
+            'content': "Y",
+            'nodes': [
+              {'content': "Y1", 'nodes': []},
+              {'content': "Y2", 'nodes': []},
+            ]
+          }
         ]
       }, {
         'root': '{{>node}}',
