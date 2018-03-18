@@ -7,7 +7,7 @@ library mustache_specs;
 
 import 'dart:io';
 import 'dart:convert';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:mustache/mustache.dart';
 
 String render(source, values, {partial}) {
@@ -47,7 +47,8 @@ _defineGroupFromFile(filename, text) {
     //as for some reason dart can run the group more than once causing the test
     //to fail the second time it runs
     tearDown(() {
-      (lambdas['Interpolation - Multiple Calls'] as _DummyCallableWithState).reset();
+      (lambdas['Interpolation - Multiple Calls'] as _DummyCallableWithState)
+          .reset();
     });
 
     tests.forEach((t) {

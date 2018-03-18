@@ -1,6 +1,6 @@
 library mustache_test;
 
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:mustache/mustache.dart';
 
 const MISMATCHED_TAG = 'Mismatched tag';
@@ -21,11 +21,13 @@ main() {
       var output = parse('_{{var}}_').renderString({"var": "bob"});
       expect(output, equals('_bob_'));
     });
+
     test('Comment', () {
       var output = parse('_{{! i am a\n comment ! }}_').renderString({});
       expect(output, equals('__'));
     });
   });
+
   group('Section', () {
     test('Map', () {
       var output = parse('{{#section}}_{{var}}_{{/section}}').renderString({
@@ -33,6 +35,7 @@ main() {
       });
       expect(output, equals('_bob_'));
     });
+
     test('List', () {
       var output = parse('{{#section}}_{{var}}_{{/section}}').renderString({
         "section": [
@@ -42,21 +45,25 @@ main() {
       });
       expect(output, equals('_bob__jim_'));
     });
+
     test('Empty List', () {
       var output = parse('{{#section}}_{{var}}_{{/section}}')
           .renderString({"section": []});
       expect(output, equals(''));
     });
+
     test('False', () {
       var output = parse('{{#section}}_{{var}}_{{/section}}')
           .renderString({"section": false});
       expect(output, equals(''));
     });
+
     test('Invalid value', () {
       var ex = renderFail('{{#section}}_{{var}}_{{/section}}', {"section": 42});
       expect(ex is TemplateException, isTrue);
       expect(ex.message, startsWith(BAD_VALUE_SECTION));
     });
+
     test('Invalid value - lenient mode', () {
       var output = parse('{{#var}}_{{var}}_{{/var}}', lenient: true)
           .renderString({'var': 42});
@@ -253,6 +260,7 @@ Empty.
       });
       expect(output, equals(''));
     });
+
     test('List', () {
       var output = parse('{{^section}}_{{var}}_{{/section}}').renderString({
         "section": [
@@ -262,26 +270,31 @@ Empty.
       });
       expect(output, equals(''));
     });
+
     test('Empty List', () {
       var output =
           parse('{{^section}}_ok_{{/section}}').renderString({"section": []});
       expect(output, equals('_ok_'));
     });
+
     test('False', () {
       var output = parse('{{^section}}_ok_{{/section}}')
           .renderString({"section": false});
       expect(output, equals('_ok_'));
     });
+
     test('Invalid value', () {
       var ex = renderFail('{{^section}}_{{var}}_{{/section}}', {"section": 42});
       expect(ex is TemplateException, isTrue);
       expect(ex.message, startsWith(BAD_VALUE_INV_SECTION));
     });
+
     test('Invalid value - lenient mode', () {
       var output = parse('{{^var}}_ok_{{/var}}', lenient: true)
           .renderString({'var': 42});
       expect(output, equals(''));
     });
+
     test('True', () {
       var output =
           parse('{{^section}}_ok_{{/section}}').renderString({"section": true});
@@ -376,7 +389,7 @@ Empty.
       var source = r'{{#section}}_{{var}}_{{/section}}';
       var ex = renderFail(source, {"section": {}});
       expectFail(ex, null, null, VALUE_MISSING);
-    });
+    }, skip: true);
 
     // Null variables shouldn't be a problem.
     test('Null variable', () {
@@ -396,16 +409,18 @@ Empty.
 
   group('Lenient', () {
     test('Odd section name', () {
-      var output = parse(r'{{#section$%$^%}}_{{var}}_{{/section$%$^%}}',
-          lenient: true).renderString({
+      var output =
+          parse(r'{{#section$%$^%}}_{{var}}_{{/section$%$^%}}', lenient: true)
+              .renderString({
         r'section$%$^%': {'var': 'bob'}
       });
       expect(output, equals('_bob_'));
     });
 
     test('Odd variable name', () {
-      var output = parse(r'{{#section}}_{{var$%$^%}}_{{/section}}',
-          lenient: true).renderString({
+      var output =
+          parse(r'{{#section}}_{{var$%$^%}}_{{/section}}', lenient: true)
+              .renderString({
         'section': {r'var$%$^%': 'bob'}
       });
       expect(output, equals('_bob_'));
@@ -425,12 +440,23 @@ Empty.
       expect(output, equals(''));
     });
 
-// Known failure
-//		test('Null inverse section', () {
-//			var output = parse('{{^section}}_{{var}}_{{/section}}', lenient: true)
-//				.renderString({"section": null}, lenient: true);
-//			expect(output, equals(''));
-//		});
+    test('Null inverse section', () {
+      var output = parse('{{^section}}_{{var}}_{{/section}}', lenient: true)
+          .renderString({"section": null});
+      expect(output, equals('__'));
+    });
+
+    test('Not exist section', () {
+      var output = parse('{{#section}}_{{var}}_{{/section}}', lenient: true)
+          .renderString({});
+      expect(output, equals(''));
+    });
+
+    test('Not exist inverse section', () {
+      var output = parse('{{^section}}_{{var}}_{{/section}}', lenient: true)
+          .renderString({});
+      expect(output, equals('__'));
+    });
   });
 
   group('Escape tags', () {
@@ -438,6 +464,7 @@ Empty.
       var output = parse('{{{blah}}}').renderString({'blah': '&'});
       expect(output, equals('&'));
     });
+
     test('{{& ... }}', () {
       var output = parse('{{{blah}}}').renderString({'blah': '&'});
       expect(output, equals('&'));
@@ -496,13 +523,19 @@ Empty.
       var output = _partialTest({
         'content': "X",
         'nodes': [
-          {'content': "Y", 'nodes': []}
+          {
+            'content': "Y",
+            'nodes': [
+              {'content': "Y1"},
+              {'content': "Y2"}
+            ]
+          }
         ]
       }, {
         'root': '{{>node}}',
         'node': '{{content}}<{{#nodes}}{{>node}}{{/nodes}}>'
       }, 'root', lenient: true);
-      expect(output, equals('X<Y<>>'));
+      expect(output, equals('X<Y<Y1<>Y2<>>>'));
     });
 
     test('standalone without previous', () {
@@ -548,8 +581,7 @@ Empty.
           output: '__FILE__ != __LINE__');
     });
 
-    //FIXME
-    skip_test('inverted sections truthy', () {
+    test('inverted sections truthy', () {
       var template = '<{{^lambda}}{{static}}{{/lambda}}>';
       var values = {'lambda': (_) => false, 'static': 'static'};
       var output = '<>';
@@ -777,6 +809,7 @@ expectFail(ex, int line, int column, [String msgStartsWith]) {
   if (msgStartsWith != null) expect(ex.message, startsWith(msgStartsWith));
 }
 
+@mustache
 class Foo {
   String bar;
   Function lambda;
