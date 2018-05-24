@@ -1,5 +1,6 @@
 out
 packages
+.dart_tool/
 /pubspec.lock
 /test/spec
 /.idea
