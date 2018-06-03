@@ -2,7 +2,7 @@ import 'package:mustache/mustache.dart';
 
 main() {
   var t = new Template('{{ foo }}');
-  var lambda = (_) => 'bar';
+  Function lambda = (_) => 'bar';
   var output = t.renderString({'foo': lambda}); // bar
   print(output);
 
