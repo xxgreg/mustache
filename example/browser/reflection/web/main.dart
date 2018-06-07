@@ -4,6 +4,8 @@
 import 'dart:html' as dom;
 import 'package:mustache/mustache.dart';
 
+import 'main.reflectable.dart';
+
 @mustache
 class Version {
     final int major;
@@ -22,6 +24,8 @@ class DartLang {
 }
 
 void main() {
+    initializeReflectable();
+
     final Template template = new Template(
         """
             <div>

@@ -7,8 +7,11 @@ library mustache_specs;
 
 import 'dart:io';
 import 'dart:convert';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
+
 import 'package:mustache/mustache.dart';
+
+import 'mustache_specs.reflectable.dart';
 
 String render(source, values, {partial}) {
   var resolver = null;
@@ -22,6 +25,8 @@ String render(source, values, {partial}) {
 }
 
 main() {
+  initializeReflectable();
+
   defineTests();
 }
 
@@ -46,7 +51,8 @@ _defineGroupFromFile(filename, text) {
     //Make sure that we reset the state of the Interpolation - Multiple Calls test
     //as for some reason dart can run the group more than once causing the test
     //to fail the second time it runs
-    tearDown(() => lambdas['Interpolation - Multiple Calls'].reset());
+
+    // tearDown(() => lambdas['Interpolation - Multiple Calls'].reset());
 
     tests.forEach((t) {
       var testDescription = new StringBuffer(t['name']);
@@ -104,7 +110,7 @@ class _DummyCallableWithState {
 Function wrapLambda(Function f) =>
     (LambdaContext ctx) => ctx.renderSource(f(ctx.source).toString());
 
-var lambdas = {
+var lambdas = <String,Function>{
   'Interpolation': wrapLambda((t) => 'world'),
   'Interpolation - Expansion': wrapLambda((t) => '{{planet}}'),
   'Interpolation - Alternate Delimiters':

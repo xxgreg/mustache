@@ -1,4 +1,4 @@
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 import 'package:mustache/src/node.dart';
 import 'package:mustache/src/parser.dart';
@@ -6,7 +6,11 @@ import 'package:mustache/src/scanner.dart';
 import 'package:mustache/src/template_exception.dart';
 import 'package:mustache/src/token.dart';
 
+import 'parser_test.reflectable.dart';
+
 main() {
+    initializeReflectable();
+
   group('Scanner', () {
     test('scan text', () {
       var source = 'abc';
@@ -155,13 +159,13 @@ main() {
     test('parse section', () {
       var source = 'abc{{#foo}}def{{/foo}}ghi';
       var parser = new Parser(source, 'foo', '{{ }}', lenient: false);
-      var nodes = parser.parse();
+      final List<Node> nodes = parser.parse();
       expectNodes(nodes, [
         new TextNode('abc', 0, 3),
         new SectionNode('foo', 3, 11, '{{ }}'),
         new TextNode('ghi', 22, 25)
       ]);
-      expectNodes(nodes[1].children, [new TextNode('def', 11, 14)]);
+      expectNodes((nodes[1] as SectionNode).children, [new TextNode('def', 11, 14)]);
     });
 
     test('parse section standalone tag whitespace', () {
@@ -173,7 +177,7 @@ main() {
         new SectionNode('foo', 4, 12, '{{ }}'),
         new TextNode('ghi', 26, 29)
       ]);
-      expectNodes(nodes[1].children, [new TextNode('def\n', 13, 17)]);
+      expectNodes((nodes[1] as SectionNode).children, [new TextNode('def\n', 13, 17)]);
     });
 
     test('parse section standalone tag whitespace consecutive', () {
@@ -186,7 +190,7 @@ main() {
         new SectionNode('foo', 26, 34, '{{ }}'),
         new TextNode('ghi', 48, 51),
       ]);
-      expectNodes(nodes[1].children, [new TextNode('def\n', 13, 17)]);
+      expectNodes((nodes[1] as SectionNode).children, [new TextNode('def\n', 13, 17)]);
     });
 
     test('parse section standalone tag whitespace on first line', () {
@@ -197,7 +201,7 @@ main() {
         new SectionNode('foo', 2, 10, '{{ }}'),
         new TextNode('ghi', 26, 29)
       ]);
-      expectNodes(nodes[0].children, [new TextNode('def\n', 13, 17)]);
+      expectNodes((nodes[0] as SectionNode).children, [new TextNode('def\n', 13, 17)]);
     });
 
     test('parse section standalone tag whitespace on last line', () {
@@ -205,7 +209,7 @@ main() {
       var parser = new Parser(source, 'foo', '{{ }}', lenient: false);
       var nodes = parser.parse();
       expectNodes(nodes, [new SectionNode('foo', 0, 8, '{{ }}')]);
-      expectNodes(nodes[0].children, [new TextNode('def\n', 8, 12)]);
+      expectNodes((nodes[0] as SectionNode).children, [new TextNode('def\n', 8, 12)]);
     });
 
     test('parse variable newline', () {
@@ -228,7 +232,7 @@ main() {
         new SectionNode('foo', 5, 13, '{{ }}'),
         new TextNode('ghi', 27, 30)
       ]);
-      expectNodes(nodes[1].children, [new TextNode('def\n', 14, 18)]);
+      expectNodes((nodes[1] as SectionNode).children, [new TextNode('def\n', 14, 18)]);
     });
 
     test('parse whitespace', () {
@@ -253,13 +257,13 @@ main() {
       var source = '{{= | | =}}<|#lambda|-|/lambda|>';
       var parser = new Parser(source, 'foo', '{{ }}', lenient: false);
       var nodes = parser.parse();
-      expect(nodes[1].delimiters, equals('| |'));
+      expect((nodes[1] as SectionNode).delimiters, equals('| |'));
       expectNodes(nodes, [
         new TextNode('<', 11, 12),
         new SectionNode('lambda', 12, 21, '| |'),
         new TextNode('>', 31, 32),
       ]);
-      expectNodes(nodes[1].children, [new TextNode('-', 21, 22)]);
+      expectNodes((nodes[1] as SectionNode).children, [new TextNode('-', 21, 22)]);
     });
 
     test('corner case strict', () {

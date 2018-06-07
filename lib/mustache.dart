@@ -5,6 +5,16 @@ library mustache;
 import 'package:reflectable/reflectable.dart';
 import 'src/template.dart' as t;
 
+class MustacheMirrorsUsedAnnotation extends Reflectable {
+    const MustacheMirrorsUsedAnnotation() : super(
+        invokingCapability,
+        reflectedTypeCapability
+    );
+}
+
+const MustacheMirrorsUsedAnnotation mustache = const MustacheMirrorsUsedAnnotation();
+
+
 /// Use new Template(source) instead.
 @deprecated
 Template parse(String source, {bool lenient: false}) =>
@@ -69,15 +79,6 @@ abstract class LambdaContext {
   /// Lookup the value of a variable in the current context.
   Object lookup(String variableName);
 }
-
-class MustacheMirrorsUsedAnnotation extends Reflectable {
-  const MustacheMirrorsUsedAnnotation() : super(
-      invokingCapability,
-      reflectedTypeCapability
-  );
-}
-
-const MustacheMirrorsUsedAnnotation mustache = const MustacheMirrorsUsedAnnotation();
 
 /// [TemplateException] is used to obtain the line and column numbers
 /// of the token which caused parse or render to fail.

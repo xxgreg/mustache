@@ -147,8 +147,11 @@ class Parser {
       children.add(new TextNode(token.value, token.start, token.end));
     } else {
       var last = children.removeLast();
-      var node = new TextNode(last.text + token.value, last.start, token.end);
-      children.add(node);
+      if(last is! TextNode) {
+          children.add(new TextNode(token.value, token.start, token.end));
+      } else {
+          children.add(new TextNode((last as TextNode).text + token.value, last.start, token.end));
+      }
     }
   }
 

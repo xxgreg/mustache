@@ -9,19 +9,14 @@ environment:
   sdk: '>=1.0.0 <2.0.0'
 
 dependencies:
-  browser: '>=0.10.0 <0.11.0'
-  dart_to_js_script_rewriter: '^0.1.0'
 
   mustache:
     path: ../../../
 
 dev_dependencies:
-  reflectable: '^0.5.0'
 
-transformers:
-- dart_to_js_script_rewriter
+  build_runner: ^0.8.0
+  build_test: ^0.10.0
+  build_web_compilers: ^0.4.0
 
-- reflectable:
-    entry_points:
-      - web/main.dart # The path to your main file
-    # formatted: true # Optional.
+

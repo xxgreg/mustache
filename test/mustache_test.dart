@@ -1,7 +1,9 @@
 library mustache_test;
 
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 import 'package:mustache/mustache.dart';
+
+import 'mustache_test.reflectable.dart';
 
 const MISMATCHED_TAG = 'Mismatched tag';
 const UNEXPECTED_EOF = 'Unexpected end of input';
@@ -16,6 +18,8 @@ Template parse(String source, {bool lenient: false}) =>
     new Template(source, lenient: lenient);
 
 main() {
+    initializeReflectable();
+
   group('Basic', () {
     test('Variable', () {
       var output = parse('_{{var}}_').renderString({"var": "bob"});
@@ -549,12 +553,12 @@ Empty.
     });
 
     //FIXME
-    skip_test('inverted sections truthy', () {
+    test('inverted sections truthy', () {
       var template = '<{{^lambda}}{{static}}{{/lambda}}>';
       var values = {'lambda': (_) => false, 'static': 'static'};
       var output = '<>';
       expect(parse(template).renderString(values), equals(output));
-    });
+    },skip: "???");
 
     test("seth's use case", () {
       var template = '<{{#markdown}}{{content}}{{/markdown}}>';

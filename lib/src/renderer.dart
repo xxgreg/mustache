@@ -94,13 +94,15 @@ class Renderer extends Visitor {
 
     if (value is Function) {
       var context = new LambdaContext(node, this, isSection: false);
-      value = value(context);
+      final Function callback = value;
+      value = callback(context);
       context.close();
     }
 
     if (value == noSuchProperty) {
-      if (!lenient) throw error(
-          'Value was missing for variable tag: ${node.name}.', node);
+      if (!lenient) {
+          throw error('Value was missing for variable tag: ${node.name}.', node);
+      }
     } else {
       var valueString = (value == null) ? '' : value.toString();
       var output = !node.escape || !htmlEscapeValues
@@ -290,7 +292,7 @@ class Renderer extends Visitor {
   m.TemplateException error(String message, Node node) =>
       new TemplateException(message, templateName, source, node.start);
 
-  static const Map<String, String> _htmlEscapeMap = const {
+  static const Map<int, String> _htmlEscapeMap = const {
     _AMP: '&amp;',
     _LT: '&lt;',
     _GT: '&gt;',

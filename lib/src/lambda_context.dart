@@ -72,7 +72,7 @@ class LambdaContext implements m.LambdaContext {
 
     if (nodes.isEmpty) return '';
 
-    if (nodes.length == 1 && nodes.first is TextNode) return nodes.first.text;
+    if (nodes.length == 1 && nodes.first is TextNode) return (nodes.first as TextNode).text;
 
     return _renderer.source.substring(node.contentStart, node.contentEnd);
   }
