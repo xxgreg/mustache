@@ -61,7 +61,7 @@ This library uses mirrors. When compiling with dart2js you will need to pass the
 
 ```dart
   var t = new Template('{{ author.name }}');
-  var output = template.renderString({'author': {'name': 'Greg Lowe'}});
+  var output = t.renderString({'author': {'name': 'Greg Lowe'}});
 ```
 
 ## Partials - example usage
