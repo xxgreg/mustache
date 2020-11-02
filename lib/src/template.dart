@@ -9,13 +9,15 @@ class Template implements m.Template {
       bool htmlEscapeValues = true,
       String name,
       m.PartialResolver partialResolver,
-      String delimiters = '{{ }}'})
+      String delimiters = '{{ }}',
+      m.ValueResolver valueResolver = m.defaultValueResolver})
       : source = source,
         _nodes = parser.parse(source, lenient, name, delimiters),
         _lenient = lenient,
         _htmlEscapeValues = htmlEscapeValues,
         _name = name,
-        _partialResolver = partialResolver;
+        _partialResolver = partialResolver,
+        _valueResolver = valueResolver;
 
   @override
   final String source;
@@ -24,6 +26,7 @@ class Template implements m.Template {
   final bool _htmlEscapeValues;
   final String _name;
   final m.PartialResolver _partialResolver;
+  final m.ValueResolver _valueResolver;
 
   @override
   String get name => _name;
@@ -38,7 +41,7 @@ class Template implements m.Template {
   @override
   void render(values, StringSink sink) {
     var renderer = Renderer(sink, [values], _lenient, _htmlEscapeValues,
-        _partialResolver, _name, '', source);
+        _partialResolver, _valueResolver, _name, '', source);
     renderer.render(_nodes);
   }
 }

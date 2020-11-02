@@ -12,7 +12,8 @@ abstract class Template {
       bool htmlEscapeValues,
       String name,
       PartialResolver partialResolver,
-      String delimiters}) = t.Template.fromSource;
+      String delimiters,
+      ValueResolver valueResolver}) = t.Template.fromSource;
 
   String get name;
   String get source;
@@ -29,6 +30,27 @@ abstract class Template {
 }
 
 typedef PartialResolver = Template Function(String);
+
+const Object noSuchProperty = Object();
+
+typedef ValueResolver = Object Function(Object, Object);
+
+final RegExp _integerTag = RegExp(r'^[0-9]+$');
+
+//FIXME should name be String??
+// Returns the property of the given object by name. For a map,
+// which contains the key name, this is object[name]. For other
+// objects, this is object.name or object.name(). If no property
+// by the given name exists, this method returns noSuchProperty.
+Object defaultValueResolver(Object object, Object name) {
+  if (object is Map && object.containsKey(name)) return object[name];
+
+  if (object is List && _integerTag.hasMatch(name)) {
+    return object[int.parse(name)];
+  }
+
+  return noSuchProperty;
+}
 
 typedef LambdaFunction = Object Function(LambdaContext context);
 

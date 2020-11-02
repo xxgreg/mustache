@@ -4,12 +4,18 @@ import 'node.dart';
 import 'template.dart';
 import 'template_exception.dart';
 
-const Object noSuchProperty = Object();
-final RegExp _integerTag = RegExp(r'^[0-9]+$');
 
 class Renderer extends Visitor {
-  Renderer(this.sink, List stack, this.lenient, this.htmlEscapeValues,
-      this.partialResolver, this.templateName, this.indent, this.source)
+  Renderer(
+      this.sink,
+      List stack,
+      this.lenient,
+      this.htmlEscapeValues,
+      this.partialResolver,
+      this.valueResolver,
+      this.templateName,
+      this.indent,
+      this.source)
       : _stack = List.from(stack);
 
   Renderer.partial(Renderer ctx, Template partial, String indent)
@@ -19,24 +25,42 @@ class Renderer extends Visitor {
             ctx.lenient,
             ctx.htmlEscapeValues,
             ctx.partialResolver,
+            ctx.valueResolver,
             ctx.templateName,
             ctx.indent + indent,
             partial.source);
 
   Renderer.subtree(Renderer ctx, StringSink sink)
-      : this(sink, ctx._stack, ctx.lenient, ctx.htmlEscapeValues,
-            ctx.partialResolver, ctx.templateName, ctx.indent, ctx.source);
+      : this(
+            sink,
+            ctx._stack,
+            ctx.lenient,
+            ctx.htmlEscapeValues,
+            ctx.partialResolver,
+            ctx.valueResolver,
+            ctx.templateName,
+            ctx.indent,
+            ctx.source);
 
   Renderer.lambda(Renderer ctx, String source, String indent, StringSink sink,
       String delimiters)
-      : this(sink, ctx._stack, ctx.lenient, ctx.htmlEscapeValues,
-            ctx.partialResolver, ctx.templateName, ctx.indent + indent, source);
+      : this(
+            sink,
+            ctx._stack,
+            ctx.lenient,
+            ctx.htmlEscapeValues,
+            ctx.partialResolver,
+            ctx.valueResolver,
+            ctx.templateName,
+            ctx.indent + indent,
+            source);
 
   final StringSink sink;
   final List _stack;
   final bool lenient;
   final bool htmlEscapeValues;
   final m.PartialResolver partialResolver;
+  final m.ValueResolver valueResolver;
   final String templateName;
   final String indent;
   final String source;
@@ -92,7 +116,7 @@ class Renderer extends Visitor {
       context.close();
     }
 
-    if (value == noSuchProperty) {
+    if (value == m.noSuchProperty) {
       if (!lenient) {
         throw error('Value was missing for variable tag: ${node.name}.', node);
       }
@@ -130,7 +154,7 @@ class Renderer extends Visitor {
     } else if (value == false) {
       // Do nothing.
 
-    } else if (value == noSuchProperty) {
+    } else if (value == m.noSuchProperty) {
       if (!lenient) {
         throw error('Value was missing for section tag: ${node.name}.', node);
       }
@@ -155,7 +179,7 @@ class Renderer extends Visitor {
     } else if (value == true || value is Map || value is Iterable) {
       // Do nothing.
 
-    } else if (value == noSuchProperty) {
+    } else if (value == m.noSuchProperty) {
       if (lenient) {
         _renderWithValue(node, null);
       } else {
@@ -208,34 +232,20 @@ class Renderer extends Visitor {
       return _stack.last;
     }
     var parts = name.split('.');
-    var object = noSuchProperty;
+    var object = m.noSuchProperty;
     for (var o in _stack.reversed) {
-      object = _getNamedProperty(o, parts[0]);
-      if (object != noSuchProperty) {
+      object = valueResolver(o, parts[0]);
+      if (object != m.noSuchProperty) {
         break;
       }
     }
     for (var i = 1; i < parts.length; i++) {
-      if (object == null || object == noSuchProperty) {
-        return noSuchProperty;
+      if (object == null || object == m.noSuchProperty) {
+        return m.noSuchProperty;
       }
-      object = _getNamedProperty(object, parts[i]);
+      object = valueResolver(object, parts[i]);
     }
     return object;
-  }
-
-  // Returns the property of the given object by name. For a map,
-  // which contains the key name, this is object[name]. For other
-  // objects, this is object.name or object.name(). If no property
-  // by the given name exists, this method returns noSuchProperty.
-  Object _getNamedProperty(dynamic object, dynamic name) {
-    if (object is Map && object.containsKey(name)) return object[name];
-
-    if (object is List && _integerTag.hasMatch(name)) {
-      return object[int.parse(name)];
-    }
-
-    return noSuchProperty;
   }
 
   m.TemplateException error(String message, Node node) =>
