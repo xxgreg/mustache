@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.2.0
+
+ * Run in null-safety mode.
+
 ## 1.1.1
 
  * Fixed error "boolean expression must not be null". Thanks Nico.

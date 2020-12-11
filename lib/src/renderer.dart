@@ -11,7 +11,7 @@ import 'template_exception.dart';
 final RegExp _validTag = new RegExp(r'^[0-9a-zA-Z\_\-\.]+$');
 final RegExp _integerTag = new RegExp(r'^[0-9]+$');
 
-const Object noSuchProperty = const Object();
+const Object noSuchProperty = Object();
 
 class Renderer extends Visitor {
   Renderer(this.sink, List stack, this.lenient, this.htmlEscapeValues,
@@ -42,14 +42,14 @@ class Renderer extends Visitor {
   final List _stack;
   final bool lenient;
   final bool htmlEscapeValues;
-  final m.PartialResolver partialResolver;
-  final String templateName;
+  final m.PartialResolver? partialResolver;
+  final String? templateName;
   final String indent;
   final String source;
 
   void push(value) => _stack.add(value);
 
-  Object pop() => _stack.removeLast();
+  Object? pop() => _stack.removeLast();
 
   void write(Object output) => sink.write(output.toString());
 
@@ -101,10 +101,9 @@ class Renderer extends Visitor {
         throw error('Value was missing for variable tag: ${node.name}.', node);
     } else {
       var valueString = (value == null) ? '' : value.toString();
-      var output = !node.escape || !htmlEscapeValues
+      write(!node.escape || !htmlEscapeValues
           ? valueString
-          : _htmlEscape(valueString);
-      if (output != null) write(output);
+          : _htmlEscape(valueString));
     }
   }
 
@@ -187,8 +186,9 @@ class Renderer extends Visitor {
 
   void visitPartial(PartialNode node) {
     var partialName = node.name;
-    Template template =
-        partialResolver == null ? null : partialResolver(partialName);
+    var partialResolver = this.partialResolver;
+    var template =
+        partialResolver == null ? null : partialResolver(partialName) as Template?;
     if (template != null) {
       var renderer = new Renderer.partial(this, template, node.indent);
       var nodes = getTemplateNodes(template);
@@ -202,12 +202,12 @@ class Renderer extends Visitor {
 
   // Walks up the stack looking for the variable.
   // Handles dotted names of the form "a.b.c".
-  Object resolveValue(String name) {
+  Object? resolveValue(String name) {
     if (name == '.') {
       return _stack.last;
     }
     var parts = name.split('.');
-    var object = noSuchProperty;
+    Object? object = noSuchProperty;
     for (var o in _stack.reversed) {
       object = _getNamedProperty(o, parts[0]);
       if (object != noSuchProperty) {
@@ -227,7 +227,7 @@ class Renderer extends Visitor {
   // which contains the key name, this is object[name]. For other
   // objects, this is object.name or object.name(). If no property
   // by the given name exists, this method returns noSuchProperty.
-  _getNamedProperty(object, name) {
+  Object? _getNamedProperty(Object? object, String name) {
     if (object is Map && object.containsKey(name)) return object[name];
 
     if (object is List && _integerTag.hasMatch(name))
@@ -239,7 +239,7 @@ class Renderer extends Visitor {
     var field = instance.type.instanceMembers[new Symbol(name)];
     if (field == null) return noSuchProperty;
 
-    var invocation = null;
+    InstanceMirror? invocation = null;
     if ((field is VariableMirror) ||
         ((field is MethodMirror) && (field.isGetter))) {
       invocation = instance.getField(field.simpleName);

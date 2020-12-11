@@ -6,26 +6,26 @@ class TemplateException implements m.TemplateException {
   TemplateException(this.message, this.templateName, this.source, this.offset);
 
   final String message;
-  final String templateName;
-  final String source;
-  final int offset;
+  final String? templateName;
+  final String? source;
+  final int? offset;
 
   bool _isUpdated = false;
-  int _line;
-  int _column;
-  String _context;
+  int? _line;
+  int? _column;
+  String? _context;
 
-  int get line {
+  int? get line {
     _update();
     return _line;
   }
 
-  int get column {
+  int? get column {
     _update();
     return _column;
   }
 
-  String get context {
+  String? get context {
     _update();
     return _context;
   }
@@ -44,9 +44,12 @@ class TemplateException implements m.TemplateException {
     if (_isUpdated) return;
     _isUpdated = true;
 
-    if (source == null ||
-        offset == null ||
-        (offset < 0 || offset > source.length)) return;
+    var source = this.source;
+    if (source == null) return;
+
+    var offset = this.offset;
+    if (offset == null) return;
+    if (offset < 0 || offset > source.length) return;
 
     // Find line and character column.
     int lineNum = 1;

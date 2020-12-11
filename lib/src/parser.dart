@@ -6,7 +6,7 @@ import 'template_exception.dart';
 import 'token.dart';
 
 List<Node> parse(
-    String source, bool lenient, String templateName, String delimiters) {
+    String source, bool lenient, String? templateName, String delimiters) {
   var parser = new Parser(source, templateName, delimiters, lenient: lenient);
   return parser.parse();
 }
@@ -35,7 +35,7 @@ class TagType {
 }
 
 class Parser {
-  Parser(String source, String templateName, String delimiters,
+  Parser(String source, String? templateName, String delimiters,
       {lenient: false})
       : _source = source,
         _templateName = templateName,
@@ -46,12 +46,12 @@ class Parser {
 
   final String _source;
   final bool _lenient;
-  final String _templateName;
+  final String? _templateName;
   final String _delimiters;
   final Scanner _scanner;
-  final List<SectionNode> _stack = <SectionNode>[];
-  List<Token> _tokens;
-  String _currentDelimiters;
+  final List<SectionNode> _stack = [];
+  late List<Token> _tokens;
+  late String _currentDelimiters;
   int _offset = 0;
 
   List<Node> parse() {
@@ -86,7 +86,8 @@ class Parser {
           break;
 
         case TokenType.lineEnd:
-          _appendTextToken(_read());
+          _read();
+          _appendTextToken(token);
           _parseLine();
           break;
 
@@ -104,11 +105,11 @@ class Parser {
   }
 
   // Returns null on EOF.
-  Token _peek() => _offset < _tokens.length ? _tokens[_offset] : null;
+  Token? _peek() => _offset < _tokens.length ? _tokens[_offset] : null;
 
   // Returns null on EOF.
-  Token _read() {
-    var t = null;
+  Token? _read() {
+    Token? t = null;
     if (_offset < _tokens.length) {
       t = _tokens[_offset];
       _offset++;
@@ -125,7 +126,7 @@ class Parser {
     return token;
   }
 
-  Token _readIf(TokenType type, {eofOk: false}) {
+  Token? _readIf(TokenType type, {eofOk: false}) {
     var token = _peek();
     if (!eofOk && token == null) throw _errorEof();
     return token != null && token.type == type ? _read() : null;
@@ -154,14 +155,14 @@ class Parser {
 
   // Add the node to top most section on the stack. If a section node then
   // push it onto the stack, if a close section tag, then pop the stack.
-  void _appendTag(Tag tag, Node node) {
+  void _appendTag(Tag tag, Node? node) {
     switch (tag.type) {
 
       // {{#...}}  {{^...}}
       case TagType.openSection:
       case TagType.openInverseSection:
-        _stack.last.children.add(node);
-        _stack.add(node);
+        _stack.last.children.add(node!);
+        _stack.add(node as SectionNode);
         break;
 
       // {{/...}}
@@ -232,7 +233,7 @@ class Parser {
       ];
 
       if (tag != null &&
-          (_peek() == null || _peek().type == TokenType.lineEnd) &&
+          (_peek()?.type ?? TokenType.lineEnd) == TokenType.lineEnd &&
           standaloneTypes.contains(tag.type)) {
         // This is a tag on a "standalone line", so do not create text nodes
         // for whitespace, or the following newline.
@@ -262,7 +263,7 @@ class Parser {
 
   // If open delimiter, or change delimiter token then return a tag.
   // If EOF or any another token then return null.
-  Tag _readTag() {
+  Tag? _readTag() {
     var t = _peek();
     if (t == null ||
         (t.type != TokenType.changeDelimiter &&
@@ -293,7 +294,7 @@ class Parser {
       tagType = TagType.tripleMustache;
     } else {
       var sigil = _readIf(TokenType.sigil);
-      tagType = sigil == null ? TagType.variable : _tagTypeMap[sigil.value];
+      tagType = sigil == null ? TagType.variable : _tagTypeMap[sigil.value]!;
     }
 
     _readIf(TokenType.whitespace);
@@ -334,11 +335,11 @@ class Parser {
     return new Tag(tagType, name, open.start, close.end);
   }
 
-  Node _createNodeFromTag(Tag tag, {String partialIndent: ''}) {
+  Node? _createNodeFromTag(Tag? tag, {String partialIndent: ''}) {
     // Handle EOF case.
     if (tag == null) return null;
 
-    Node node = null;
+    Node? node = null;
     switch (tag.type) {
       case TagType.openSection:
       case TagType.openInverseSection:

@@ -478,7 +478,7 @@ Empty.
         templates[k] = new Template(sources[k],
             name: k, lenient: lenient, partialResolver: resolver);
       }
-      var t = resolver(renderTemplate);
+      var t = resolver(renderTemplate)!;
       return t.renderString(values);
     }
 
@@ -549,7 +549,8 @@ Empty.
   });
 
   group('Lambdas', () {
-    _lambdaTest({template, lambda, output}) => expect(
+    // All required
+    _lambdaTest({required template, lambda, output}) => expect(
         parse(template).renderString({'lambda': lambda}), equals(output));
 
     test('basic', () {
@@ -649,7 +650,7 @@ Empty.
 
     test('LambdaContext.lookup closed', () {
       var t = new Template('{{ foo }}');
-      var lc2;
+      late var lc2;
       t.renderString({'foo': (lc) => lc2 = lc, 'bar': 'jim'});
       expect(() => lc2.lookup('foo'), throwsException);
     });
@@ -795,7 +796,7 @@ renderFail(source, values) {
   }
 }
 
-expectFail(ex, int line, int column, [String msgStartsWith]) {
+expectFail(ex, int? line, int? column, [String? msgStartsWith]) {
   expect(ex is TemplateException, isTrue);
   if (line != null) expect(ex.line, equals(line));
   if (column != null) expect(ex.column, equals(column));
@@ -803,7 +804,7 @@ expectFail(ex, int line, int column, [String msgStartsWith]) {
 }
 
 class Foo {
-  String bar;
-  Function lambda;
+  String? bar;
+  Function? lambda;
   jim() => 'bob';
 }
