@@ -4,46 +4,49 @@ import 'token.dart';
 import 'template_exception.dart';
 
 class Scanner {
-  Scanner(String source, this._templateName, String delimiters)
+  factory Scanner(String source, String? templateName, String delimiters) {
+    if (delimiters.length == 3) {
+      return Scanner._(source, templateName,
+          delimiters.codeUnits[0],
+          delimiters.codeUnits[2]);
+    } else if (delimiters.length == 5) {
+      return Scanner._(source, templateName,
+          delimiters.codeUnits[0],
+          delimiters.codeUnits[4],
+      openDelimiterInner: delimiters.codeUnits[1],
+      closeDelimiterInner: delimiters.codeUnits[3]);
+    } else {
+      throw new TemplateException(
+          'Invalid delimiter string $delimiters', null, null, null);
+    }
+  }
+    
+    Scanner._(String source, this._templateName, this._openDelimiter, this._closeDelimiter, {int? openDelimiterInner, int? closeDelimiterInner})
       : _source = source,
-        _itr = source.runes.iterator {
+        _itr = source.runes.iterator,
+      _openDelimiterInner = openDelimiterInner,
+      _closeDelimiterInner = closeDelimiterInner {
     if (source == '') {
       _c = _EOF;
     } else {
       _itr.moveNext();
       _c = _itr.current;
     }
-
-    if (delimiters == null) {
-      _openDelimiter = _openDelimiterInner = _OPEN_MUSTACHE;
-      _closeDelimiter = _closeDelimiterInner = _CLOSE_MUSTACHE;
-    } else if (delimiters.length == 3) {
-      _openDelimiter = delimiters.codeUnits[0];
-      _closeDelimiter = delimiters.codeUnits[2];
-    } else if (delimiters.length == 5) {
-      _openDelimiter = delimiters.codeUnits[0];
-      _openDelimiterInner = delimiters.codeUnits[1];
-      _closeDelimiterInner = delimiters.codeUnits[3];
-      _closeDelimiter = delimiters.codeUnits[4];
-    } else {
-      throw new TemplateException(
-          'Invalid delimiter string $delimiters', null, null, null);
-    }
   }
 
-  final String _templateName;
+  final String? _templateName;
   final String _source;
 
   final Iterator<int> _itr;
   int _offset = 0;
   int _c = 0;
 
-  final List<Token> _tokens = new List<Token>();
+  final List<Token> _tokens = [];
 
   // These can be changed by the change delimiter tag.
   int _openDelimiter;
-  int _openDelimiterInner;
-  int _closeDelimiterInner;
+  int? _openDelimiterInner;
+  int? _closeDelimiterInner;
   int _closeDelimiter;
 
   List<Token> scan() {
@@ -60,13 +63,16 @@ class Scanner {
       _read();
 
       // If only a single delimiter character then create a text token.
-      if (_openDelimiterInner != null && _peek() != _openDelimiterInner) {
-        var value = new String.fromCharCode(_openDelimiter);
-        _append(TokenType.text, value, start, _offset);
-        continue;
+      var openDelimiterInner = _openDelimiterInner;
+      if (openDelimiterInner != null) {
+        if (_peek() != openDelimiterInner) {
+          var value = new String.fromCharCode(_openDelimiter);
+          _append(TokenType.text, value, start, _offset);
+          continue;
+        } else {
+          _expect(openDelimiterInner);
+        }
       }
-
-      if (_openDelimiterInner != null) _expect(_openDelimiterInner);
 
       // Handle triple mustache.
       if (_openDelimiterInner == _OPEN_MUSTACHE &&
@@ -86,9 +92,10 @@ class Scanner {
           _parseChangeDelimiterTag(start);
         } else {
           // Scan standard mustache tag.
-          var value = new String.fromCharCodes(_openDelimiterInner == null
+          var openDelimiterInner = _openDelimiterInner;
+          var value = new String.fromCharCodes(openDelimiterInner == null
               ? [_openDelimiter]
-              : [_openDelimiter, _openDelimiterInner]);
+              : [_openDelimiter, openDelimiterInner]);
 
           _append(TokenType.openDelimiter, value, start, wsStart);
 
@@ -257,12 +264,13 @@ class Scanner {
     if (_peek() != _EOF) {
       int start = _offset;
 
-      if (_closeDelimiterInner != null) _expect(_closeDelimiterInner);
+      var closeDelimiterInner = _closeDelimiterInner;
+      if (closeDelimiterInner != null) _expect(closeDelimiterInner);
       _expect(_closeDelimiter);
 
-      String value = new String.fromCharCodes(_closeDelimiterInner == null
+      String value = new String.fromCharCodes(closeDelimiterInner == null
           ? [_closeDelimiter]
-          : [_closeDelimiterInner, _closeDelimiter]);
+          : [closeDelimiterInner, _closeDelimiter]);
 
       _append(TokenType.closeDelimiter, value, start, _offset);
     }
@@ -330,11 +338,11 @@ class Scanner {
     // Create delimiter string.
     var buffer = new StringBuffer();
     buffer.writeCharCode(_openDelimiter);
-    if (_openDelimiterInner != null) buffer.writeCharCode(_openDelimiterInner);
+    var openDelimiterInner = _openDelimiterInner;
+    if (openDelimiterInner != null) buffer.writeCharCode(openDelimiterInner);
     buffer.write(' ');
-    if (_closeDelimiterInner != null) {
-      buffer.writeCharCode(_closeDelimiterInner);
-    }
+    var closeDelimiterInner =_closeDelimiterInner;
+    if (closeDelimiterInner != null) buffer.writeCharCode(closeDelimiterInner);
     buffer.writeCharCode(_closeDelimiter);
     var value = buffer.toString();
 

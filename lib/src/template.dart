@@ -8,9 +8,9 @@ import 'renderer.dart';
 class Template implements m.Template {
   Template.fromSource(String source,
       {bool lenient: false,
-      bool htmlEscapeValues: true,
-      String name,
-      m.PartialResolver partialResolver,
+      bool? htmlEscapeValues: true,
+      String? name,
+      m.PartialResolver? partialResolver,
       String delimiters: "{{ }}"})
       : source = source,
         _nodes = parser.parse(source, lenient, name, delimiters),
@@ -22,11 +22,11 @@ class Template implements m.Template {
   final String source;
   final List<Node> _nodes;
   final bool _lenient;
-  final bool _htmlEscapeValues;
-  final String _name;
-  final m.PartialResolver _partialResolver;
+  final bool? _htmlEscapeValues;
+  final String? _name;
+  final m.PartialResolver? _partialResolver;
 
-  String get name => _name;
+  String? get name => _name;
 
   String renderString(values) {
     var buf = new StringBuffer();
@@ -35,7 +35,7 @@ class Template implements m.Template {
   }
 
   void render(values, StringSink sink) {
-    var renderer = new Renderer(sink, [values], _lenient, _htmlEscapeValues,
+    var renderer = new Renderer(sink, [values], _lenient, _htmlEscapeValues!,
         _partialResolver, _name, '', source);
     renderer.render(_nodes);
   }
