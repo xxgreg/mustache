@@ -4,7 +4,7 @@ import 'token.dart';
 import 'template_exception.dart';
 
 class Scanner {
-  Scanner(String source, this._templateName, String delimiters)
+  Scanner(String source, this._templateName, String? delimiters)
       : _source = source,
         _itr = source.runes.iterator {
     if (source == '') {
@@ -26,42 +26,42 @@ class Scanner {
       _closeDelimiterInner = delimiters.codeUnits[3];
       _closeDelimiter = delimiters.codeUnits[4];
     } else {
-      throw new TemplateException(
+      throw TemplateException(
           'Invalid delimiter string $delimiters', null, null, null);
     }
   }
 
-  final String _templateName;
+  final String? _templateName;
   final String _source;
 
   final Iterator<int> _itr;
   int _offset = 0;
   int _c = 0;
 
-  final List<Token> _tokens = new List<Token>();
+  final List<Token> _tokens = [];
 
   // These can be changed by the change delimiter tag.
-  int _openDelimiter;
-  int _openDelimiterInner;
-  int _closeDelimiterInner;
-  int _closeDelimiter;
+  int? _openDelimiter;
+  int? _openDelimiterInner;
+  int? _closeDelimiterInner;
+  int? _closeDelimiter;
 
   List<Token> scan() {
-    for (int c = _peek(); c != _EOF; c = _peek()) {
+    for (var c = _peek(); c != _EOF; c = _peek()) {
       // Scan text tokens.
       if (c != _openDelimiter) {
         _scanText();
         continue;
       }
 
-      int start = _offset;
+      var start = _offset;
 
       // Read first open delimiter character.
       _read();
 
       // If only a single delimiter character then create a text token.
       if (_openDelimiterInner != null && _peek() != _openDelimiterInner) {
-        var value = new String.fromCharCode(_openDelimiter);
+        var value = String.fromCharCode(_openDelimiter!);
         _append(TokenType.text, value, start, _offset);
         continue;
       }
@@ -79,16 +79,16 @@ class Scanner {
       } else {
         // Check to see if this is a change delimiter tag. {{= | | =}}
         // Need to skip whitespace and check for "=".
-        int wsStart = _offset;
+        var wsStart = _offset;
         var ws = _readWhile(_isWhitespace);
 
         if (_peek() == _EQUAL) {
           _parseChangeDelimiterTag(start);
         } else {
           // Scan standard mustache tag.
-          var value = new String.fromCharCodes(_openDelimiterInner == null
-              ? [_openDelimiter]
-              : [_openDelimiter, _openDelimiterInner]);
+          var value = String.fromCharCodes(_openDelimiterInner == null
+              ? [_openDelimiter!]
+              : [_openDelimiter!, _openDelimiterInner!]);
 
           _append(TokenType.openDelimiter, value, start, wsStart);
 
@@ -105,33 +105,33 @@ class Scanner {
   int _peek() => _c;
 
   int _read() {
-    int c = _c;
+    var c = _c;
     _offset++;
     _c = _itr.moveNext() ? _itr.current : _EOF;
     return c;
   }
 
-  String _readWhile(bool test(int charCode)) {
+  String _readWhile(bool Function(int charCode) test) {
     if (_c == _EOF) return '';
-    int start = _offset;
+    var start = _offset;
     while (_peek() != _EOF && test(_peek())) {
       _read();
     }
-    int end = _peek() == _EOF ? _source.length : _offset;
+    var end = _peek() == _EOF ? _source.length : _offset;
     return _source.substring(start, end);
   }
 
-  _expect(int expectedCharCode) {
-    int c = _read();
+  void _expect(int? expectedCharCode) {
+    var c = _read();
 
     if (c == _EOF) {
-      throw new TemplateException(
+      throw TemplateException(
           'Unexpected end of input', _templateName, _source, _offset - 1);
     } else if (c != expectedCharCode) {
-      throw new TemplateException(
+      throw TemplateException(
           'Unexpected character, '
-          'expected: ${new String.fromCharCode(expectedCharCode)}, '
-          'was: ${new String.fromCharCode(c)}',
+          'expected: ${String.fromCharCode(expectedCharCode!)}, '
+          'was: ${String.fromCharCode(c)}',
           _templateName,
           _source,
           _offset - 1);
@@ -139,7 +139,7 @@ class Scanner {
   }
 
   void _append(TokenType type, String value, int start, int end) =>
-      _tokens.add(new Token(type, value, start, end));
+      _tokens.add(Token(type, value, start, end));
 
   bool _isWhitespace(int c) =>
       const [_SPACE, _TAB, _NEWLINE, _RETURN].contains(c);
@@ -148,11 +148,11 @@ class Scanner {
   // tokens for whitespace at the begining of a line. This is because the
   // mustache spec requires special handing of whitespace.
   void _scanText() {
-    int start = 0;
+    var start = 0;
     TokenType token;
     String value;
 
-    for (int c = _peek(); c != _EOF && c != _openDelimiter; c = _peek()) {
+    for (var c = _peek(); c != _EOF && c != _openDelimiter; c = _peek()) {
       start = _offset;
 
       switch (c) {
@@ -199,7 +199,7 @@ class Scanner {
         (_closeDelimiterInner == null && c == _closeDelimiter) ||
         (_closeDelimiterInner != null && c == _closeDelimiterInner);
 
-    for (int c = _peek(); c != _EOF && !isCloseDelimiter(c); c = _peek()) {
+    for (var c = _peek(); c != _EOF && !isCloseDelimiter(c); c = _peek()) {
       start = _offset;
 
       switch (c) {
@@ -211,7 +211,7 @@ class Scanner {
         case _EXCLAIM:
           _read();
           token = TokenType.sigil;
-          value = new String.fromCharCode(c);
+          value = String.fromCharCode(c);
           break;
 
         case _SPACE:
@@ -255,14 +255,14 @@ class Scanner {
   // Scan close delimiter token.
   void _scanCloseDelimiter() {
     if (_peek() != _EOF) {
-      int start = _offset;
+      var start = _offset;
 
       if (_closeDelimiterInner != null) _expect(_closeDelimiterInner);
       _expect(_closeDelimiter);
 
-      String value = new String.fromCharCodes(_closeDelimiterInner == null
-          ? [_closeDelimiter]
-          : [_closeDelimiterInner, _closeDelimiter]);
+      var value = String.fromCharCodes(_closeDelimiterInner == null
+          ? [_closeDelimiter!]
+          : [_closeDelimiterInner!, _closeDelimiter!]);
 
       _append(TokenType.closeDelimiter, value, start, _offset);
     }
@@ -271,7 +271,7 @@ class Scanner {
   // Scan close triple mustache delimiter token.
   void _scanCloseTripleMustache() {
     if (_peek() != _EOF) {
-      int start = _offset;
+      var start = _offset;
 
       _expect(_CLOSE_MUSTACHE);
       _expect(_CLOSE_MUSTACHE);
@@ -307,8 +307,9 @@ class Scanner {
 
     c = _read();
 
-    if (_isWhitespace(c) || c == _EQUAL)
+    if (_isWhitespace(c) || c == _EQUAL) {
       throw _error('Incorrect change delimiter tag.');
+    }
 
     if (_isWhitespace(_peek()) || _peek() == _EQUAL) {
       _closeDelimiterInner = null;
@@ -328,21 +329,21 @@ class Scanner {
     _expect(delimiter);
 
     // Create delimiter string.
-    var buffer = new StringBuffer();
-    buffer.writeCharCode(_openDelimiter);
-    if (_openDelimiterInner != null) buffer.writeCharCode(_openDelimiterInner);
+    var buffer = StringBuffer();
+    buffer.writeCharCode(_openDelimiter!);
+    if (_openDelimiterInner != null) buffer.writeCharCode(_openDelimiterInner!);
     buffer.write(' ');
     if (_closeDelimiterInner != null) {
-      buffer.writeCharCode(_closeDelimiterInner);
+      buffer.writeCharCode(_closeDelimiterInner!);
     }
-    buffer.writeCharCode(_closeDelimiter);
+    buffer.writeCharCode(_closeDelimiter!);
     var value = buffer.toString();
 
     _append(TokenType.changeDelimiter, value, start, _offset);
   }
 
   TemplateException _error(String message) {
-    return new TemplateException(message, _templateName, _source, _offset);
+    return TemplateException(message, _templateName, _source, _offset);
   }
 }
 
@@ -352,12 +353,15 @@ const int _NEWLINE = 10;
 const int _RETURN = 13;
 const int _SPACE = 32;
 const int _EXCLAIM = 33;
+// ignore: unused_element
 const int _QUOTE = 34;
+// ignore: unused_element
 const int _APOS = 39;
 const int _HASH = 35;
 const int _AMP = 38;
 const int _PERIOD = 46;
 const int _FORWARD_SLASH = 47;
+// ignore: unused_element
 const int _LT = 60;
 const int _EQUAL = 61;
 const int _GT = 62;
@@ -366,12 +370,20 @@ const int _CARET = 94;
 const int _OPEN_MUSTACHE = 123;
 const int _CLOSE_MUSTACHE = 125;
 
+// ignore: unused_element
 const int _A = 65;
+// ignore: unused_element
 const int _Z = 90;
+// ignore: unused_element
 const int _a = 97;
+// ignore: unused_element
 const int _z = 122;
+// ignore: unused_element
 const int _0 = 48;
+// ignore: unused_element
 const int _9 = 57;
 
+// ignore: unused_element
 const int _UNDERSCORE = 95;
+// ignore: unused_element
 const int _MINUS = 45;

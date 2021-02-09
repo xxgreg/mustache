@@ -6,8 +6,8 @@ import 'src/template.dart' as t;
 
 /// Use new Template(source) instead.
 @deprecated
-Template parse(String source, {bool lenient: false}) =>
-    new Template(source, lenient: lenient);
+Template parse(String source, {bool lenient = false}) =>
+    Template(source, lenient: lenient);
 
 /// A Template can be efficiently rendered multiple times with different
 /// values.
@@ -16,14 +16,16 @@ abstract class Template {
   /// if the syntax of the source is invalid.
   /// Tag names may only contain characters a-z, A-Z, 0-9, underscore, and minus,
   /// unless lenient mode is specified.
-  factory Template(String source,
-      {bool lenient,
-      bool htmlEscapeValues,
-      String name,
-      PartialResolver partialResolver,
-      String delimiters}) = t.Template.fromSource;
+  factory Template(
+    String source, {
+    bool? lenient,
+    bool? htmlEscapeValues,
+    String? name,
+    PartialResolver? partialResolver,
+    String? delimiters,
+  }) = t.Template.fromSource;
 
-  String get name;
+  String? get name;
   String get source;
 
   /// [values] can be a combination of Map, List, String. Any non-String object
@@ -37,9 +39,9 @@ abstract class Template {
   void render(values, StringSink sink);
 }
 
-typedef Template PartialResolver(String templateName);
+typedef PartialResolver = Template? Function(String templateName);
 
-typedef Object LambdaFunction(LambdaContext context);
+typedef LambdaFunction = Object Function(LambdaContext context);
 
 /// Passed as an argument to a mustache lambda function. The methods on
 /// this object may only be called before the lambda function returns. If a
@@ -48,11 +50,11 @@ abstract class LambdaContext {
   /// Render the current section tag in the current context and return the
   /// result as a string. If provided, value will be added to the top of the
   /// context's stack.
-  String renderString({Object value});
+  String renderString({Object? value});
 
   /// Render and directly output the current section tag. If provided, value
   /// will be added to the top of the context's stack.
-  void render({Object value});
+  void render({Object? value});
 
   /// Output a string. The output will not be html escaped, and will be written
   /// before the output returned from the lambda.
@@ -63,14 +65,13 @@ abstract class LambdaContext {
 
   /// Evaluate the string as a mustache template using the current context. If
   /// provided, value will be added to the top of the context's stack.
-  String renderSource(String source, {Object value});
+  String renderSource(String source, {Object? value});
 
   /// Lookup the value of a variable in the current context.
-  Object lookup(String variableName);
+  Object? lookup(String variableName);
 }
 
-const MustacheMirrorsUsedAnnotation mustache =
-    const MustacheMirrorsUsedAnnotation();
+const MustacheMirrorsUsedAnnotation mustache = MustacheMirrorsUsedAnnotation();
 
 class MustacheMirrorsUsedAnnotation {
   const MustacheMirrorsUsedAnnotation();
@@ -84,23 +85,24 @@ abstract class TemplateException implements Exception {
 
   /// The name used to identify the template, as passed to the Template
   /// constructor.
-  String get templateName;
+  String? get templateName;
 
   /// The 1-based line number of the token where formatting error was found.
-  int get line;
+  int? get line;
 
   /// The 1-based column number of the token where formatting error was found.
-  int get column;
+  int? get column;
 
   /// The character offset within the template source.
-  int get offset;
+  int? get offset;
 
   /// The template source.
-  String get source;
+  String? get source;
 
   /// A short source substring of the source at the point the problem occurred
   /// with parsing or rendering.
-  String get context;
+  String? get context;
 
+  @override
   String toString();
 }

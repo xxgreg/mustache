@@ -5,15 +5,15 @@ import 'scanner.dart';
 import 'template_exception.dart';
 import 'token.dart';
 
-List<Node> parse(
-    String source, bool lenient, String templateName, String delimiters) {
-  var parser = new Parser(source, templateName, delimiters, lenient: lenient);
+List<Node?> parse(
+    String source, bool? lenient, String? templateName, String? delimiters) {
+  var parser = Parser(source, templateName, delimiters, lenient: lenient);
   return parser.parse();
 }
 
 class Tag {
   Tag(this.type, this.name, this.start, this.end);
-  final TagType type;
+  final TagType? type;
   final String name;
   final int start;
   final int end;
@@ -23,42 +23,41 @@ class TagType {
   const TagType(this.name);
   final String name;
 
-  static const TagType openSection = const TagType('openSection');
-  static const TagType openInverseSection = const TagType('openInverseSection');
-  static const TagType closeSection = const TagType('closeSection');
-  static const TagType variable = const TagType('variable');
-  static const TagType tripleMustache = const TagType('tripleMustache');
-  static const TagType unescapedVariable = const TagType('unescapedVariable');
-  static const TagType partial = const TagType('partial');
-  static const TagType comment = const TagType('comment');
-  static const TagType changeDelimiter = const TagType('changeDelimiter');
+  static const TagType openSection = TagType('openSection');
+  static const TagType openInverseSection = TagType('openInverseSection');
+  static const TagType closeSection = TagType('closeSection');
+  static const TagType variable = TagType('variable');
+  static const TagType tripleMustache = TagType('tripleMustache');
+  static const TagType unescapedVariable = TagType('unescapedVariable');
+  static const TagType partial = TagType('partial');
+  static const TagType comment = TagType('comment');
+  static const TagType changeDelimiter = TagType('changeDelimiter');
 }
 
 class Parser {
-  Parser(String source, String templateName, String delimiters,
-      {lenient: false})
+  Parser(String source, String? templateName, String? delimiters,
+      {lenient = false})
       : _source = source,
         _templateName = templateName,
         _delimiters = delimiters,
         _lenient = lenient,
-        _scanner =
-            new Scanner(source, templateName, delimiters);
+        _scanner = Scanner(source, templateName, delimiters);
 
   final String _source;
-  final bool _lenient;
-  final String _templateName;
-  final String _delimiters;
+  final bool? _lenient;
+  final String? _templateName;
+  final String? _delimiters;
   final Scanner _scanner;
-  final List<SectionNode> _stack = <SectionNode>[];
-  List<Token> _tokens;
-  String _currentDelimiters;
+  final List<SectionNode?> _stack = <SectionNode?>[];
+  late List<Token> _tokens;
+  String? _currentDelimiters;
   int _offset = 0;
 
-  List<Node> parse() {
+  List<Node?> parse() {
     _tokens = _scanner.scan();
     _currentDelimiters = _delimiters;
     _stack.clear();
-    _stack.add(new SectionNode('root', 0, 0, _delimiters));
+    _stack.add(SectionNode('root', 0, 0, _delimiters));
 
     // Handle a standalone tag on first line, including special case where the
     // first line is empty.
@@ -86,29 +85,29 @@ class Parser {
           break;
 
         case TokenType.lineEnd:
-          _appendTextToken(_read());
+          _appendTextToken(_read()!);
           _parseLine();
           break;
 
         default:
-          throw new Exception('Unreachable code.');
+          throw Exception('Unreachable code.');
       }
     }
 
     if (_stack.length != 1) {
-      throw new TemplateException("Unclosed tag: '${_stack.last.name}'.",
-          _templateName, _source, _stack.last.start);
+      throw TemplateException("Unclosed tag: '${_stack.last!.name}'.",
+          _templateName, _source, _stack.last!.start);
     }
 
-    return _stack.last.children;
+    return _stack.last!.children;
   }
 
   // Returns null on EOF.
-  Token _peek() => _offset < _tokens.length ? _tokens[_offset] : null;
+  Token? _peek() => _offset < _tokens.length ? _tokens[_offset] : null;
 
   // Returns null on EOF.
-  Token _read() {
-    var t = null;
+  Token? _read() {
+    dynamic t;
     if (_offset < _tokens.length) {
       t = _tokens[_offset];
       _offset++;
@@ -125,7 +124,7 @@ class Parser {
     return token;
   }
 
-  Token _readIf(TokenType type, {eofOk: false}) {
+  Token? _readIf(TokenType type, {eofOk = false}) {
     var token = _peek();
     if (!eofOk && token == null) throw _errorEof();
     return token != null && token.type == type ? _read() : null;
@@ -135,46 +134,46 @@ class Parser {
       _error('Unexpected end of input.', _source.length - 1);
 
   TemplateException _error(String msg, int offset) =>
-      new TemplateException(msg, _templateName, _source, offset);
+      TemplateException(msg, _templateName, _source, offset);
 
   // Add a text node to top most section on the stack and merge consecutive
   // text nodes together.
   void _appendTextToken(Token token) {
     assert(const [TokenType.text, TokenType.lineEnd, TokenType.whitespace]
         .contains(token.type));
-    var children = _stack.last.children;
+    var children = _stack.last!.children;
     if (children.isEmpty || children.last is! TextNode) {
-      children.add(new TextNode(token.value, token.start, token.end));
+      children.add(TextNode(token.value, token.start, token.end));
     } else {
       var last = children.removeLast() as TextNode;
-      var node = new TextNode(last.text + token.value, last.start, token.end);
+      var node = TextNode(last.text + token.value, last.start, token.end);
       children.add(node);
     }
   }
 
   // Add the node to top most section on the stack. If a section node then
   // push it onto the stack, if a close section tag, then pop the stack.
-  void _appendTag(Tag tag, Node node) {
+  void _appendTag(Tag tag, Node? node) {
     switch (tag.type) {
 
       // {{#...}}  {{^...}}
       case TagType.openSection:
       case TagType.openInverseSection:
-        _stack.last.children.add(node);
-        _stack.add(node);
+        _stack.last!.children.add(node);
+        _stack.add(node as SectionNode?);
         break;
 
       // {{/...}}
       case TagType.closeSection:
-        if (tag.name != _stack.last.name) {
-          throw new TemplateException(
-              "Mismatched tag, expected: "
-              "'${_stack.last.name}', was: '${tag.name}'",
+        if (tag.name != _stack.last!.name) {
+          throw TemplateException(
+              'Mismatched tag, expected: '
+              "'${_stack.last!.name}', was: '${tag.name}'",
               _templateName,
               _source,
               tag.start);
         }
-        var node = _stack.removeLast();
+        var node = _stack.removeLast()!;
         node.contentEnd = tag.start;
         break;
 
@@ -183,7 +182,7 @@ class Parser {
       case TagType.unescapedVariable:
       case TagType.tripleMustache:
       case TagType.partial:
-        if (node != null) _stack.last.children.add(node);
+        if (node != null) _stack.last!.children.add(node);
         break;
 
       case TagType.comment:
@@ -192,7 +191,7 @@ class Parser {
         break;
 
       default:
-        throw new Exception('Unreachable code.');
+        throw Exception('Unreachable code.');
     }
   }
 
@@ -222,7 +221,7 @@ class Parser {
       var tagNode = _createNodeFromTag(tag, partialIndent: indent);
       var followingWhitespace = _readIf(TokenType.whitespace, eofOk: true);
 
-      const standaloneTypes = const [
+      const standaloneTypes = [
         TagType.openSection,
         TagType.closeSection,
         TagType.openInverseSection,
@@ -232,7 +231,7 @@ class Parser {
       ];
 
       if (tag != null &&
-          (_peek() == null || _peek().type == TokenType.lineEnd) &&
+          (_peek() == null || _peek()!.type == TokenType.lineEnd) &&
           standaloneTypes.contains(tag.type)) {
         // This is a tag on a "standalone line", so do not create text nodes
         // for whitespace, or the following newline.
@@ -249,9 +248,9 @@ class Parser {
     }
   }
 
-  final RegExp _validIdentifier = new RegExp(r'^[0-9a-zA-Z\_\-\.]+$');
+  final RegExp _validIdentifier = RegExp(r'^[0-9a-zA-Z\_\-\.]+$');
 
-  static const _tagTypeMap = const {
+  static const _tagTypeMap = {
     '#': TagType.openSection,
     '^': TagType.openInverseSection,
     '/': TagType.closeSection,
@@ -262,7 +261,7 @@ class Parser {
 
   // If open delimiter, or change delimiter token then return a tag.
   // If EOF or any another token then return null.
-  Tag _readTag() {
+  Tag? _readTag() {
     var t = _peek();
     if (t == null ||
         (t.type != TokenType.changeDelimiter &&
@@ -275,7 +274,7 @@ class Parser {
 
       // Change delimiter tags are already parsed by the scanner.
       // So just create a tag and return it.
-      return new Tag(TagType.changeDelimiter, t.value, t.start, t.end);
+      return Tag(TagType.changeDelimiter, t.value, t.start, t.end);
     }
 
     // Start parsing a typical tag.
@@ -287,7 +286,7 @@ class Parser {
     // A sigil is the character which identifies which sort of tag it is,
     // i.e.  '#', '/', or '>'.
     // Variable tags and triple mustache tags don't have a sigil.
-    TagType tagType;
+    TagType? tagType;
 
     if (open.value == '{{{') {
       tagType = TagType.tripleMustache;
@@ -315,7 +314,7 @@ class Parser {
     // Check to see if the tag name is valid.
     if (tagType != TagType.comment) {
       if (name == '') throw _error('Empty tag name.', open.start);
-      if (!_lenient) {
+      if (!_lenient!) {
         if (name.contains('\t') || name.contains('\n') || name.contains('\r')) {
           throw _error('Tags may not contain newlines or tabs.', open.start);
         }
@@ -331,31 +330,31 @@ class Parser {
 
     var close = _expect(TokenType.closeDelimiter);
 
-    return new Tag(tagType, name, open.start, close.end);
+    return Tag(tagType, name, open.start, close.end);
   }
 
-  Node _createNodeFromTag(Tag tag, {String partialIndent: ''}) {
+  Node? _createNodeFromTag(Tag? tag, {String partialIndent = ''}) {
     // Handle EOF case.
     if (tag == null) return null;
 
-    Node node = null;
+    Node? node;
     switch (tag.type) {
       case TagType.openSection:
       case TagType.openInverseSection:
-        bool inverse = tag.type == TagType.openInverseSection;
-        node = new SectionNode(tag.name, tag.start, tag.end, _currentDelimiters,
+        var inverse = tag.type == TagType.openInverseSection;
+        node = SectionNode(tag.name, tag.start, tag.end, _currentDelimiters,
             inverse: inverse);
         break;
 
       case TagType.variable:
       case TagType.unescapedVariable:
       case TagType.tripleMustache:
-        bool escape = tag.type == TagType.variable;
-        node = new VariableNode(tag.name, tag.start, tag.end, escape: escape);
+        var escape = tag.type == TagType.variable;
+        node = VariableNode(tag.name, tag.start, tag.end, escape: escape);
         break;
 
       case TagType.partial:
-        node = new PartialNode(tag.name, tag.start, tag.end, partialIndent);
+        node = PartialNode(tag.name, tag.start, tag.end, partialIndent);
         break;
 
       case TagType.closeSection:
@@ -365,7 +364,7 @@ class Parser {
         break;
 
       default:
-        throw new Exception('Unreachable code');
+        throw Exception('Unreachable code');
     }
     return node;
   }

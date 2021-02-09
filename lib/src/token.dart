@@ -5,21 +5,22 @@ class TokenType {
 
   final String name;
 
+  @override
   String toString() => '(TokenType $name)';
 
-  static const TokenType text = const TokenType('text');
-  static const TokenType openDelimiter = const TokenType('openDelimiter');
-  static const TokenType closeDelimiter = const TokenType('closeDelimiter');
+  static const TokenType text = TokenType('text');
+  static const TokenType openDelimiter = TokenType('openDelimiter');
+  static const TokenType closeDelimiter = TokenType('closeDelimiter');
 
   // A sigil is the word commonly used to describe the special character at the
   // start of mustache tag i.e. #, ^ or /.
-  static const TokenType sigil = const TokenType('sigil');
-  static const TokenType identifier = const TokenType('identifier');
-  static const TokenType dot = const TokenType('dot');
+  static const TokenType sigil = TokenType('sigil');
+  static const TokenType identifier = TokenType('identifier');
+  static const TokenType dot = TokenType('dot');
 
-  static const TokenType changeDelimiter = const TokenType('changeDelimiter');
-  static const TokenType whitespace = const TokenType('whitespace');
-  static const TokenType lineEnd = const TokenType('lineEnd');
+  static const TokenType changeDelimiter = TokenType('changeDelimiter');
+  static const TokenType whitespace = TokenType('whitespace');
+  static const TokenType lineEnd = TokenType('lineEnd');
 }
 
 class Token {
@@ -31,5 +32,6 @@ class Token {
   final int start;
   final int end;
 
-  String toString() => "(Token ${type.name} \"$value\" $start $end)";
+  @override
+  String toString() => '(Token ${type.name} \"$value\" $start $end)';
 }

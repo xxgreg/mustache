@@ -24,47 +24,54 @@ class LambdaContext implements m.LambdaContext {
   }
 
   TemplateException _error(String msg) {
-    return new TemplateException(
+    return TemplateException(
         msg, _renderer.templateName, _renderer.source, _node.start);
   }
 
   /// Render the current section tag in the current context and return the
   /// result as a string.
-  String renderString({Object value}) {
+  @override
+  String renderString({Object? value}) {
     _checkClosed();
-    if (_node is! SectionNode) _error(
-        'LambdaContext.renderString() can only be called on section tags.');
-    var sink = new StringBuffer();
+    if (_node is! SectionNode) {
+      _error(
+          'LambdaContext.renderString() can only be called on section tags.');
+    }
+    var sink = StringBuffer();
     _renderSubtree(sink, value);
     return sink.toString();
   }
 
-  void _renderSubtree(StringSink sink, Object value) {
-    var renderer = new Renderer.subtree(_renderer, sink);
-    SectionNode section = _node;
+  void _renderSubtree(StringSink sink, Object? value) {
+    var renderer = Renderer.subtree(_renderer, sink);
+    var section = _node as SectionNode;
     if (value != null) renderer.push(value);
     renderer.render(section.children);
   }
 
-  void render({Object value}) {
+  @override
+  void render({Object? value}) {
     _checkClosed();
-    if (_node is! SectionNode) _error(
-        'LambdaContext.render() can only be called on section tags.');
+    if (_node is! SectionNode) {
+      _error('LambdaContext.render() can only be called on section tags.');
+    }
     _renderSubtree(_renderer.sink, value);
   }
 
+  @override
   void write(Object object) {
     _checkClosed();
     _renderer.write(object);
   }
 
   /// Get the unevaluated template source for the current section tag.
+  @override
   String get source {
     _checkClosed();
 
     if (_node is! SectionNode) return '';
 
-    SectionNode node = _node;
+    var node = _node as SectionNode;
 
     var nodes = node.children;
 
@@ -78,22 +85,23 @@ class LambdaContext implements m.LambdaContext {
   }
 
   /// Evaluate the string as a mustache template using the current context.
-  String renderSource(String source, {Object value}) {
+  @override
+  String renderSource(String source, {Object? value}) {
     _checkClosed();
-    var sink = new StringBuffer();
+    var sink = StringBuffer();
 
     // Lambdas used for sections should parse with the current delimiters.
-    var delimiters = '{{ }}';
+    String? delimiters = '{{ }}';
     if (_node is SectionNode) {
-      SectionNode node = _node;
+      var node = _node as SectionNode;
       delimiters = node.delimiters;
     }
 
     var nodes = parser.parse(
         source, _renderer.lenient, _renderer.templateName, delimiters);
 
-    var renderer = new Renderer.lambda(
-        _renderer, source, _renderer.indent, sink, delimiters);
+    var renderer =
+        Renderer.lambda(_renderer, source, _renderer.indent, sink, delimiters);
 
     if (value != null) renderer.push(value);
     renderer.render(nodes);
@@ -102,7 +110,8 @@ class LambdaContext implements m.LambdaContext {
   }
 
   /// Lookup the value of a variable in the current context.
-  Object lookup(String variableName) {
+  @override
+  Object? lookup(String variableName) {
     _checkClosed();
     return _renderer.resolveValue(variableName);
   }

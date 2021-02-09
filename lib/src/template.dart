@@ -7,11 +7,11 @@ import 'renderer.dart';
 
 class Template implements m.Template {
   Template.fromSource(String source,
-      {bool lenient: false,
-      bool htmlEscapeValues: true,
-      String name,
-      m.PartialResolver partialResolver,
-      String delimiters: "{{ }}"})
+      {bool? lenient = false,
+      bool? htmlEscapeValues = true,
+      String? name,
+      m.PartialResolver? partialResolver,
+      String? delimiters = '{{ }}'})
       : source = source,
         _nodes = parser.parse(source, lenient, name, delimiters),
         _lenient = lenient,
@@ -19,27 +19,31 @@ class Template implements m.Template {
         _name = name,
         _partialResolver = partialResolver;
 
+  @override
   final String source;
-  final List<Node> _nodes;
-  final bool _lenient;
-  final bool _htmlEscapeValues;
-  final String _name;
-  final m.PartialResolver _partialResolver;
+  final List<Node?> _nodes;
+  final bool? _lenient;
+  final bool? _htmlEscapeValues;
+  final String? _name;
+  final m.PartialResolver? _partialResolver;
 
-  String get name => _name;
+  @override
+  String? get name => _name;
 
+  @override
   String renderString(values) {
-    var buf = new StringBuffer();
+    var buf = StringBuffer();
     render(values, buf);
     return buf.toString();
   }
 
+  @override
   void render(values, StringSink sink) {
-    var renderer = new Renderer(sink, [values], _lenient, _htmlEscapeValues,
+    var renderer = Renderer(sink, [values], _lenient, _htmlEscapeValues,
         _partialResolver, _name, '', source);
     renderer.render(_nodes);
   }
 }
 
 // Expose getter for nodes internally within this package.
-getTemplateNodes(Template template) => template._nodes;
+List<Node?> getTemplateNodes(Template template) => template._nodes;
