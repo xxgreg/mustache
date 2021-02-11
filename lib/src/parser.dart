@@ -107,7 +107,7 @@ class Parser {
 
   // Returns null on EOF.
   Token? _read() {
-    dynamic t;
+    Token? t;
     if (_offset < _tokens.length) {
       t = _tokens[_offset];
       _offset++;

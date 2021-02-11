@@ -25,17 +25,25 @@ class Renderer extends Visitor {
             ctx.htmlEscapeValues,
             ctx.partialResolver,
             ctx.templateName,
-            ctx.indent + indent,
+            _nullAwareStringConcat(ctx.indent, indent),
             partial.source);
 
   Renderer.subtree(Renderer ctx, StringSink sink)
       : this(sink, ctx._stack, ctx.lenient, ctx.htmlEscapeValues,
             ctx.partialResolver, ctx.templateName, ctx.indent, ctx.source);
 
-  Renderer.lambda(Renderer ctx, String source, String indent, StringSink sink,
+  Renderer.lambda(Renderer ctx, String source, String? indent, StringSink sink,
       String? delimiters)
-      : this(sink, ctx._stack, ctx.lenient, ctx.htmlEscapeValues,
-            ctx.partialResolver, ctx.templateName, ctx.indent + indent, source);
+      : this(
+          sink,
+          ctx._stack,
+          ctx.lenient,
+          ctx.htmlEscapeValues,
+          ctx.partialResolver,
+          ctx.templateName,
+          _nullAwareStringConcat(ctx.indent, indent),
+          source,
+        );
 
   final StringSink sink;
   final List _stack;
@@ -43,7 +51,7 @@ class Renderer extends Visitor {
   final bool? htmlEscapeValues;
   final m.PartialResolver? partialResolver;
   final String? templateName;
-  final String indent;
+  final String? indent;
   final String source;
 
   void push(value) => _stack.add(value);
@@ -53,12 +61,12 @@ class Renderer extends Visitor {
   void write(Object output) => sink.write(output.toString());
 
   void render(List<Node?> nodes) {
-    if (indent == '') {
+    if (indent == null || indent == '') {
       nodes.forEach((n) => n!.accept(this));
     } else if (nodes.isNotEmpty) {
       // Special case to make sure there is not an extra indent after the last
       // line in the partial file.
-      write(indent);
+      write(indent!);
 
       nodes.take(nodes.length - 1).forEach((n) => n!.accept(this));
 
@@ -74,7 +82,7 @@ class Renderer extends Visitor {
   @override
   void visitText(TextNode node, {bool lastNode = false}) {
     if (node.text == '') return;
-    if (indent == '') {
+    if (indent == null || indent == '') {
       write(node.text);
     } else if (lastNode && node.text.runes.last == _NEWLINE) {
       // Don't indent after the last line in a template.
@@ -293,6 +301,16 @@ class Renderer extends Visitor {
     buffer.write(s.substring(startIndex));
     return buffer.toString();
   }
+}
+
+String? _nullAwareStringConcat(String? left, String? right) {
+  if (left == null) {
+    return right;
+  }
+  if (right == null) {
+    return left;
+  }
+  return left + right;
 }
 
 const int _AMP = 38;
